@@ -139,6 +139,9 @@ struct kgsl_mmu_pt_ops {
 /* The device supports aperture programming from secure world */
 #define KGSL_MMU_SMMU_APERTURE BIT(11)
 
+/* The MMU carveout size is limited to 8MB */
+#define KGSL_MMU_GLOBAL_MEMSZ_8M BIT(20)
+
 /**
  * struct kgsl_mmu - Master definition for KGSL MMU devices
  * @flags: MMU device flags
