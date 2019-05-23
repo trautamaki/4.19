@@ -140,6 +140,7 @@ obj-$(CONFIG_REGULATOR_CPR2_GFX) += cpr2-gfx-regulator.o
 obj-$(CONFIG_REGULATOR_CPR3) += cpr3-regulator.o cpr3-util.o
 obj-$(CONFIG_REGULATOR_CPR3_HMSS) += cpr3-hmss-regulator.o
 obj-$(CONFIG_REGULATOR_CPR3_MMSS) += cpr3-mmss-regulator.o
+obj-$(CONFIG_REGULATOR_CPRH_KBSS) += cprh-kbss-regulator.o
 obj-$(CONFIG_REGULATOR_MEM_ACC) += mem-acc-regulator.o
 obj-$(CONFIG_REGULATOR_MSM_GFX_LDO) += msm_gfx_ldo.o
 obj-$(CONFIG_REGULATOR_CPR) += cpr-regulator.o
