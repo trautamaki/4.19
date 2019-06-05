@@ -53,6 +53,7 @@ obj-$(CONFIG_MSM_PIL)   +=      peripheral-loader.o
 obj-$(CONFIG_MSM_SPCOM) += spcom.o
 obj-$(CONFIG_MSM_CDSP_LOADER) += qdsp6v2/
 obj-$(CONFIG_MSM_JTAGV8) += jtagv8.o jtagv8-etm.o
+obj-$(CONFIG_MSM_APM) += apm.o
 obj-$(CONFIG_QCOM_SMCINVOKE) += smcinvoke.o
 obj-$(CONFIG_QCOM_RUN_QUEUE_STATS) += rq_stats.o
 
