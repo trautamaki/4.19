@@ -66,6 +66,7 @@ struct pil_desc {
 	bool sequential_loading;
 	u32 subsys_vmid;
 	bool signal_aop;
+	bool serial_loading;
 	struct mbox_client cl;
 	struct mbox_chan *mbox;
 	struct md_ss_toc *minidump_ss;
