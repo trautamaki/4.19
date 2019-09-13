@@ -2030,8 +2030,6 @@ int __init rpm_smd_regulator_driver_init(void)
 	if (initialized)
 		return 0;
 
-	initialized = true;
-
 	/* Store parameter string names as integers */
 	for (i = 0; i < RPM_REGULATOR_PARAM_MAX; i++)
 		params[i].key = rpm_vreg_string_to_int(params[i].name);
@@ -2040,7 +2038,12 @@ int __init rpm_smd_regulator_driver_init(void)
 	if (rc)
 		return rc;
 
-	return platform_driver_register(&rpm_vreg_resource_driver);
+	rc = platform_driver_register(&rpm_vreg_resource_driver);
+	if (rc)
+		return rc;
+
+	initialized = true;
+	return 0;
 }
 
 static void __exit rpm_vreg_exit(void)
