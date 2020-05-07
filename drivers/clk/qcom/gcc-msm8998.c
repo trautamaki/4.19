@@ -32,37 +32,37 @@ enum {
 	P_GPLL4_OUT_MAIN,
 	P_PLL0_EARLY_DIV_CLK_SRC,
 	P_SLEEP_CLK,
-	P_XO,
+	P_BI_TXCO,
 };
 
 static const struct parent_map gcc_parent_map_0[] = {
-	{ P_XO, 0 },
+	{ P_BI_TXCO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
 	{ P_PLL0_EARLY_DIV_CLK_SRC, 6 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
 };
 
 static const char * const gcc_parent_names_0[] = {
-	"xo",
+	"bi_txco",
 	"gpll0_out_main",
 	"gpll0_out_main",
 	"core_bi_pll_test_se",
 };
 
 static const struct parent_map gcc_parent_map_1[] = {
-	{ P_XO, 0 },
+	{ P_BI_TXCO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
 };
 
 static const char * const gcc_parent_names_1[] = {
-	"xo",
+	"bi_txco",
 	"gpll0_out_main",
 	"core_bi_pll_test_se",
 };
 
 static const struct parent_map gcc_parent_map_2[] = {
-	{ P_XO, 0 },
+	{ P_BI_TXCO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
 	{ P_SLEEP_CLK, 5 },
 	{ P_PLL0_EARLY_DIV_CLK_SRC, 6 },
@@ -70,7 +70,7 @@ static const struct parent_map gcc_parent_map_2[] = {
 };
 
 static const char * const gcc_parent_names_2[] = {
-	"xo",
+	"bi_txco",
 	"gpll0_out_main",
 	"core_pi_sleep_clk",
 	"gpll0_out_main",
@@ -78,40 +78,40 @@ static const char * const gcc_parent_names_2[] = {
 };
 
 static const struct parent_map gcc_parent_map_3[] = {
-	{ P_XO, 0 },
+	{ P_BI_TXCO, 0 },
 	{ P_SLEEP_CLK, 5 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
 };
 
 static const char * const gcc_parent_names_3[] = {
-	"xo",
+	"bi_txco",
 	"core_pi_sleep_clk",
 	"core_bi_pll_test_se",
 };
 
 static const struct parent_map gcc_parent_map_4[] = {
-	{ P_XO, 0 },
+	{ P_BI_TXCO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
 	{ P_GPLL4_OUT_MAIN, 5 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
 };
 
 static const char * const gcc_parent_names_4[] = {
-	"xo",
+	"bi_txco",
 	"gpll0_out_main",
 	"gpll4_out_main",
 	"core_bi_pll_test_se",
 };
 
 static const struct parent_map gcc_parent_map_5[] = {
-	{ P_XO, 0 },
+	{ P_BI_TXCO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
 	{ P_AUD_REF_CLK, 2 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
 };
 
 static const char * const gcc_parent_names_5[] = {
-	"xo",
+	"bi_txco",
 	"gpll0_out_main",
 	"aud_ref_clk",
 	"core_bi_pll_test_se",
@@ -132,7 +132,7 @@ static struct clk_alpha_pll gpll0 = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll0",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_alpha_pll_fixed_fabia_ops,
 		}
@@ -193,7 +193,7 @@ static struct clk_alpha_pll gpll1 = {
 		.enable_mask = BIT(1),
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll1",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_alpha_pll_fixed_fabia_ops,
 		}
@@ -254,7 +254,7 @@ static struct clk_alpha_pll gpll2 = {
 		.enable_mask = BIT(2),
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll2",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_alpha_pll_fixed_fabia_ops,
 		}
@@ -315,7 +315,7 @@ static struct clk_alpha_pll gpll3 = {
 		.enable_mask = BIT(3),
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll3",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_alpha_pll_fixed_fabia_ops,
 		}
@@ -376,7 +376,7 @@ static struct clk_alpha_pll gpll4 = {
 		.enable_mask = BIT(4),
 		.hw.init = &(struct clk_init_data){
 			.name = "gpll4",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_alpha_pll_fixed_fabia_ops,
 		}
@@ -428,7 +428,7 @@ static struct clk_alpha_pll_postdiv gpll4_out_test = {
 };
 
 static const struct freq_tbl ftbl_blsp1_qup1_i2c_apps_clk_src[] = {
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	F(50000000, P_GPLL0_OUT_MAIN, 12, 0, 0),
 	{ }
 };
@@ -448,11 +448,11 @@ static struct clk_rcg2 blsp1_qup1_i2c_apps_clk_src = {
 };
 
 static const struct freq_tbl ftbl_blsp1_qup1_spi_apps_clk_src[] = {
-	F(960000, P_XO, 10, 1, 2),
-	F(4800000, P_XO, 4, 0, 0),
-	F(9600000, P_XO, 2, 0, 0),
+	F(960000, P_BI_TXCO, 10, 1, 2),
+	F(4800000, P_BI_TXCO, 4, 0, 0),
+	F(9600000, P_BI_TXCO, 2, 0, 0),
 	F(15000000, P_GPLL0_OUT_MAIN, 10, 1, 4),
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	F(25000000, P_GPLL0_OUT_MAIN, 12, 1, 2),
 	F(50000000, P_GPLL0_OUT_MAIN, 12, 0, 0),
 	{ }
@@ -617,7 +617,7 @@ static const struct freq_tbl ftbl_blsp1_uart1_apps_clk_src[] = {
 	F(7372800, P_GPLL0_OUT_MAIN, 1, 192, 15625),
 	F(14745600, P_GPLL0_OUT_MAIN, 1, 384, 15625),
 	F(16000000, P_GPLL0_OUT_MAIN, 5, 2, 15),
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	F(24000000, P_GPLL0_OUT_MAIN, 5, 1, 5),
 	F(32000000, P_GPLL0_OUT_MAIN, 1, 4, 75),
 	F(40000000, P_GPLL0_OUT_MAIN, 15, 0, 0),
@@ -884,7 +884,7 @@ static struct clk_rcg2 blsp2_uart3_apps_clk_src = {
 };
 
 static const struct freq_tbl ftbl_gp1_clk_src[] = {
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	F(100000000, P_GPLL0_OUT_MAIN, 6, 0, 0),
 	F(200000000, P_GPLL0_OUT_MAIN, 3, 0, 0),
 	{ }
@@ -933,7 +933,7 @@ static struct clk_rcg2 gp3_clk_src = {
 };
 
 static const struct freq_tbl ftbl_hmss_ahb_clk_src[] = {
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	F(37500000, P_GPLL0_OUT_MAIN, 16, 0, 0),
 	F(75000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
 	{ }
@@ -954,7 +954,7 @@ static struct clk_rcg2 hmss_ahb_clk_src = {
 };
 
 static const struct freq_tbl ftbl_hmss_rbcpr_clk_src[] = {
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	{ }
 };
 
@@ -973,7 +973,7 @@ static struct clk_rcg2 hmss_rbcpr_clk_src = {
 };
 
 static const struct freq_tbl ftbl_pcie_aux_clk_src[] = {
-	F(1010526, P_XO, 1, 1, 19),
+	F(1010526, P_BI_TXCO, 1, 1, 19),
 	{ }
 };
 
@@ -1011,8 +1011,8 @@ static struct clk_rcg2 pdm2_clk_src = {
 };
 
 static const struct freq_tbl ftbl_sdcc2_apps_clk_src[] = {
-	F(144000, P_XO, 16, 3, 25),
-	F(400000, P_XO, 12, 1, 4),
+	F(144000, P_BI_TXCO, 16, 3, 25),
+	F(400000, P_BI_TXCO, 12, 1, 4),
 	F(20000000, P_GPLL0_OUT_MAIN, 15, 1, 2),
 	F(25000000, P_GPLL0_OUT_MAIN, 12, 1, 2),
 	F(50000000, P_GPLL0_OUT_MAIN, 12, 0, 0),
@@ -1036,8 +1036,8 @@ static struct clk_rcg2 sdcc2_apps_clk_src = {
 };
 
 static const struct freq_tbl ftbl_sdcc4_apps_clk_src[] = {
-	F(144000, P_XO, 16, 3, 25),
-	F(400000, P_XO, 12, 1, 4),
+	F(144000, P_BI_TXCO, 16, 3, 25),
+	F(400000, P_BI_TXCO, 12, 1, 4),
 	F(20000000, P_GPLL0_OUT_MAIN, 15, 1, 2),
 	F(25000000, P_GPLL0_OUT_MAIN, 12, 1, 2),
 	F(50000000, P_GPLL0_OUT_MAIN, 12, 0, 0),
@@ -1060,7 +1060,7 @@ static struct clk_rcg2 sdcc4_apps_clk_src = {
 };
 
 static const struct freq_tbl ftbl_tsif_ref_clk_src[] = {
-	F(105495, P_XO, 1, 1, 182),
+	F(105495, P_BI_TXCO, 1, 1, 182),
 	{ }
 };
 
@@ -1121,7 +1121,7 @@ static struct clk_rcg2 ufs_unipro_core_clk_src = {
 };
 
 static const struct freq_tbl ftbl_usb30_master_clk_src[] = {
-	F(19200000, P_XO, 1, 0, 0),
+	F(19200000, P_BI_TXCO, 1, 0, 0),
 	F(60000000, P_GPLL0_OUT_MAIN, 10, 0, 0),
 	F(120000000, P_GPLL0_OUT_MAIN, 5, 0, 0),
 	F(150000000, P_GPLL0_OUT_MAIN, 4, 0, 0),
@@ -1157,7 +1157,7 @@ static struct clk_rcg2 usb30_mock_utmi_clk_src = {
 };
 
 static const struct freq_tbl ftbl_usb3_phy_aux_clk_src[] = {
-	F(1200000, P_XO, 16, 0, 0),
+	F(1200000, P_BI_TXCO, 16, 0, 0),
 	{ }
 };
 
@@ -2679,7 +2679,7 @@ static struct clk_branch gcc_hdmi_clkref_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gcc_hdmi_clkref_clk",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 		},
@@ -2693,7 +2693,7 @@ static struct clk_branch gcc_ufs_clkref_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gcc_ufs_clkref_clk",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 		},
@@ -2707,7 +2707,7 @@ static struct clk_branch gcc_usb3_clkref_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gcc_usb3_clkref_clk",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 		},
@@ -2721,7 +2721,7 @@ static struct clk_branch gcc_pcie_clkref_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gcc_pcie_clkref_clk",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 		},
@@ -2735,7 +2735,7 @@ static struct clk_branch gcc_rx1_usb2_clkref_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gcc_rx1_usb2_clkref_clk",
-			.parent_names = (const char *[]){ "xo" },
+			.parent_names = (const char *[]){ "bi_txco" },
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 		},
