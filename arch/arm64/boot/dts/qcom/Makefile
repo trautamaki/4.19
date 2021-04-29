@@ -8,6 +8,11 @@ dtb-$(CONFIG_ARCH_QCOM)	+= msm8994-angler-rev-101.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= msm8996-mtp.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= sdm845-mtp.dtb
 
+dtb-$(CONFIG_ARCH_MSM8998) += cheeseburger-v2.1-dvt1.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += cheeseburger-v2.1-pvt.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += cheeseburger-v2.1-pvt1.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += cheeseburger-v2.1-backup.dtb
+
 always		:= $(dtb-y)
 subdir-y	:= $(dts-dirs)
 clean-files    := *.dtb *.dtbo
