@@ -1,7 +1,16 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
- */
+Copyright (c) 2017, 2019 The Linux Foundation. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 and
+only version 2 as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*
+*/
 
 #ifndef __Q6_INIT_H__
 #define __Q6_INIT_H__
@@ -15,6 +24,7 @@ int audio_cal_init(void);
 int core_init(void);
 int rtac_init(void);
 int msm_audio_ion_init(void);
+int audio_slimslave_init(void);
 int avtimer_init(void);
 #ifdef CONFIG_MSM_MDF
 int msm_mdf_init(void);
@@ -44,6 +54,7 @@ static inline void spk_params_exit(void)
 #endif
 
 void avtimer_exit(void);
+void audio_slimslave_exit(void);
 void msm_audio_ion_exit(void);
 void rtac_exit(void);
 void core_exit(void);
@@ -54,18 +65,7 @@ void q6asm_exit(void);
 void afe_exit(void);
 void adm_exit(void);
 void adsp_err_exit(void);
-#if IS_ENABLED(CONFIG_WCD9XXX_CODEC_CORE)
-int audio_slimslave_init(void);
-void audio_slimslave_exit(void);
-#else
-static inline int audio_slimslave_init(void)
-{
-	return 0;
-};
-static inline void audio_slimslave_exit(void)
-{
-};
-#endif
+
 #ifdef CONFIG_VOICE_MHI
 int voice_mhi_init(void);
 void voice_mhi_exit(void);
@@ -80,19 +80,5 @@ static inline void voice_mhi_exit(void)
 	return;
 }
 #endif
-
-#ifdef CONFIG_DIGITAL_CDC_RSC_MGR
-void digital_cdc_rsc_mgr_init(void);
-void digital_cdc_rsc_mgr_exit(void);
-#else
-static inline void digital_cdc_rsc_mgr_init(void)
-{
-}
-
-static inline void digital_cdc_rsc_mgr_exit(void)
-{
-}
-#endif /* CONFIG_DIGITAL_CDC_RSC_MGR */
-
 #endif
 

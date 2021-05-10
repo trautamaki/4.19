@@ -1,6 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2013-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include <linux/init.h>
@@ -13,11 +21,13 @@
 #include <linux/list.h>
 #include <linux/dma-mapping.h>
 #include <linux/dma-buf.h>
+#include <linux/iommu.h>
 #include <linux/platform_device.h>
 #include <linux/of_device.h>
 #include <linux/export.h>
 #include <linux/ion_kernel.h>
 #include <ipc/apr.h>
+#include <asm/dma-iommu.h>
 #include <dsp/msm_audio_ion.h>
 
 #define MSM_AUDIO_ION_PROBED (1 << 0)
@@ -25,16 +35,21 @@
 #define MSM_AUDIO_ION_PHYS_ADDR(alloc_data) \
 	alloc_data->table->sgl->dma_address
 
+#define MSM_AUDIO_ION_VA_START 0x10000000
+#define MSM_AUDIO_ION_VA_LEN 0x0FFFFFFF
+
 #define MSM_AUDIO_SMMU_SID_OFFSET 32
 
 struct msm_audio_ion_private {
 	bool smmu_enabled;
 	struct device *cb_dev;
+	struct dma_iommu_mapping *mapping;
 	u8 device_status;
 	struct list_head alloc_list;
 	struct mutex list_mutex;
 	u64 smmu_sid_bits;
 	u32 smmu_version;
+	u32 iova_start_addr;
 };
 
 struct msm_audio_alloc_data {
@@ -67,7 +82,7 @@ static int msm_audio_dma_buf_map(struct dma_buf *dma_buf,
 				 dma_addr_t *addr, size_t *len)
 {
 
-	struct msm_audio_alloc_data *alloc_data = NULL;
+	struct msm_audio_alloc_data *alloc_data;
 	struct device *cb_dev;
 	unsigned long ionflag = 0;
 	int rc = 0;
@@ -133,7 +148,6 @@ detach_dma_buf:
 		       alloc_data->attach);
 free_alloc_data:
 	kfree(alloc_data);
-	alloc_data = NULL;
 
 	return rc;
 }
@@ -171,7 +185,6 @@ static int msm_audio_dma_buf_unmap(struct dma_buf *dma_buf)
 
 			list_del(&(alloc_data->list));
 			kfree(alloc_data);
-			alloc_data = NULL;
 			break;
 		}
 	}
@@ -313,11 +326,6 @@ static int msm_audio_ion_map_buf(struct dma_buf *dma_buf, dma_addr_t *paddr,
 				 size_t *plen, void **vaddr)
 {
 	int rc = 0;
-
-	if (!dma_buf || !paddr || !vaddr || !plen) {
-		pr_err("%s: Invalid params\n", __func__);
-		return -EINVAL;
-	}
 
 	rc = msm_audio_ion_get_phys(dma_buf, paddr, plen);
 	if (rc) {
@@ -689,10 +697,38 @@ EXPORT_SYMBOL(msm_audio_populate_upper_32_bits);
 
 static int msm_audio_smmu_init(struct device *dev)
 {
+	struct dma_iommu_mapping *mapping;
+	struct iommu_group *grp = NULL;
+	int ret;
+
+	if (!dev->iommu_group) {
+		grp = iommu_group_get_for_dev(dev);
+		if (IS_ERR_OR_NULL(grp))
+			return PTR_ERR(grp);
+	}
+
+	mapping = arm_iommu_create_mapping(&platform_bus_type,
+					   msm_audio_ion_data.iova_start_addr,
+					   MSM_AUDIO_ION_VA_LEN);
+	if (IS_ERR(mapping))
+		return PTR_ERR(mapping);
+
+	ret = arm_iommu_attach_device(dev, mapping);
+	if (ret) {
+		dev_err(dev, "%s: Attach failed, err = %d\n",
+			__func__, ret);
+		goto fail_attach;
+	}
+
+	msm_audio_ion_data.mapping = mapping;
 	INIT_LIST_HEAD(&msm_audio_ion_data.alloc_list);
 	mutex_init(&(msm_audio_ion_data.list_mutex));
 
 	return 0;
+
+fail_attach:
+	arm_iommu_release_mapping(mapping);
+	return ret;
 }
 
 static const struct of_device_id msm_audio_ion_dt_match[] = {
@@ -708,8 +744,10 @@ static int msm_audio_ion_probe(struct platform_device *pdev)
 	u64 smmu_sid_mask = 0;
 	const char *msm_audio_ion_dt = "qcom,smmu-enabled";
 	const char *msm_audio_ion_smmu = "qcom,smmu-version";
+	const char *msm_audio_ion_iova_start_addr = "qcom,iova-start-addr";
 	const char *msm_audio_ion_smmu_sid_mask = "qcom,smmu-sid-mask";
 	bool smmu_enabled;
+	bool smmu_force_sid;
 	enum apr_subsys_state q6_state;
 	struct device *dev = &pdev->dev;
 	struct of_phandle_args iommuspec;
@@ -753,6 +791,18 @@ static int msm_audio_ion_probe(struct platform_device *pdev)
 	dev_dbg(dev, "%s: SMMU is Enabled. SMMU version is (%d)",
 		__func__, msm_audio_ion_data.smmu_version);
 
+	rc = of_property_read_u32(dev->of_node,
+				msm_audio_ion_iova_start_addr,
+				&msm_audio_ion_data.iova_start_addr);
+	if (rc) {
+		dev_dbg(dev,
+			"%s: qcom,iova_start_addr missing in DT node, initialize with default val\n",
+			__func__);
+		msm_audio_ion_data.iova_start_addr = MSM_AUDIO_ION_VA_START;
+	} else {
+		dev_dbg(dev, "%s:IOVA start addr: 0x%x\n",
+			__func__, msm_audio_ion_data.iova_start_addr);
+	}
 	/* Get SMMU SID information from Devicetree */
 	rc = of_property_read_u64(dev->of_node,
 				  msm_audio_ion_smmu_sid_mask,
@@ -772,8 +822,26 @@ static int msm_audio_ion_probe(struct platform_device *pdev)
 	else
 		smmu_sid = (iommuspec.args[0] & smmu_sid_mask);
 
+	smmu_force_sid = !!of_find_property(dev->of_node,
+					"qcom,smmu-force-sid", NULL);
+	if (smmu_force_sid) {
+		rc = of_property_read_u64(dev->of_node,
+				"qcom,smmu-force-sid", &smmu_sid);
+		if (rc) {
+			dev_err(dev,
+				"%s: Invalid smmu-force-sid property value\n",
+				__func__);
+			return rc;
+		}
+	} 
+
+	pr_err("msm_audio_ion sid bit is 0x%llx\n", smmu_sid);
+
 	msm_audio_ion_data.smmu_sid_bits =
 		smmu_sid << MSM_AUDIO_SMMU_SID_OFFSET;
+
+	/* Give a chance to DMA APIs to register an IOMMU master */
+	of_dma_configure(dev, dev->of_node);
 
 	if (msm_audio_ion_data.smmu_version == 0x2) {
 		rc = msm_audio_smmu_init(dev);
@@ -797,9 +865,16 @@ exit:
 
 static int msm_audio_ion_remove(struct platform_device *pdev)
 {
+	struct dma_iommu_mapping *mapping;
 	struct device *audio_cb_dev;
 
+	mapping = msm_audio_ion_data.mapping;
 	audio_cb_dev = msm_audio_ion_data.cb_dev;
+
+	if (audio_cb_dev && mapping) {
+		arm_iommu_detach_device(audio_cb_dev);
+		arm_iommu_release_mapping(mapping);
+	}
 
 	msm_audio_ion_data.smmu_enabled = 0;
 	msm_audio_ion_data.device_status = 0;
@@ -811,7 +886,6 @@ static struct platform_driver msm_audio_ion_driver = {
 		.name = "msm-audio-ion",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_audio_ion_dt_match,
-		.suppress_bind_attrs = true,
 	},
 	.probe = msm_audio_ion_probe,
 	.remove = msm_audio_ion_remove,

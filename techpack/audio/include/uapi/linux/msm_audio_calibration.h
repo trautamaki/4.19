@@ -104,14 +104,11 @@ enum {
 	ADM_LSM_TOPOLOGY_CAL_TYPE,
 	ADM_LSM_AUDPROC_CAL_TYPE,
 	ADM_LSM_AUDPROC_PERSISTENT_CAL_TYPE,
-	ADM_AUDPROC_PERSISTENT_CAL_TYPE,
-	AFE_FB_SPKR_PROT_V4_EX_VI_CAL_TYPE,
 	MAX_CAL_TYPES,
 };
 
 #define AFE_FB_SPKR_PROT_TH_VI_CAL_TYPE AFE_FB_SPKR_PROT_TH_VI_CAL_TYPE
 #define AFE_FB_SPKR_PROT_EX_VI_CAL_TYPE AFE_FB_SPKR_PROT_EX_VI_CAL_TYPE
-#define AFE_FB_SPKR_PROT_V4_EX_VI_CAL_TYPE AFE_FB_SPKR_PROT_V4_EX_VI_CAL_TYPE
 
 #define AFE_SIDETONE_IIR_CAL_TYPE AFE_SIDETONE_IIR_CAL_TYPE
 
@@ -120,12 +117,19 @@ enum {
 #define ADM_LSM_TOPOLOGY_CAL_TYPE ADM_LSM_TOPOLOGY_CAL_TYPE
 #define ADM_LSM_AUDPROC_CAL_TYPE ADM_LSM_AUDPROC_CAL_TYPE
 #define ADM_LSM_AUDPROC_PERSISTENT_CAL_TYPE ADM_LSM_AUDPROC_PERSISTENT_CAL_TYPE
-#define ADM_AUDPROC_PERSISTENT_CAL_TYPE ADM_AUDPROC_PERSISTENT_CAL_TYPE
 #define LSM_CAL_TYPES
 
-#define TOPOLOGY_SPECIFIC_CHANNEL_INFO
+/*
+ * The firmware on the legacy targets does not support this feature
+ */
+#if !(defined(CONFIG_ARCH_MSM8916) || defined(CONFIG_ARCH_MSM8956)   || \
+	defined(CONFIG_ARCH_MSM8996) || defined(CONFIG_ARCH_MSM8998) || \
+	defined(CONFIG_ARCH_SDM630)  || defined(CONFIG_ARCH_SDM660)  || \
+	defined(CONFIG_ARCH_SDM845))
+	#define TOPOLOGY_SPECIFIC_CHANNEL_INFO
+#endif
+
 #define MSM_SPKR_PROT_SPV3
-#define MSM_SPKR_PROT_SPV4
 
 enum {
 	VERSION_0_0,
@@ -378,16 +382,6 @@ struct audio_cal_info_sp_ex_vi_param {
 	int32_t		status[SP_V2_NUM_MAX_SPKRS];
 };
 
-struct audio_cal_info_sp_v4_ex_vi_param {
-	int32_t		ftm_re_q24[SP_V2_NUM_MAX_SPKRS];
-	int32_t		ftm_Bl_q24[SP_V2_NUM_MAX_SPKRS];
-	int32_t		ftm_Rms_q24[SP_V2_NUM_MAX_SPKRS];
-	int32_t		ftm_Kms_q24[SP_V2_NUM_MAX_SPKRS];
-	int32_t		ftm_freq_q20[SP_V2_NUM_MAX_SPKRS];
-	int32_t		ftm_Qms_q24[SP_V2_NUM_MAX_SPKRS];
-	uint32_t	status[SP_V2_NUM_MAX_SPKRS];
-};
-
 struct audio_cal_info_sp_th_vi_param {
 	/*
 	 * mode should be first param, add new params later to this.
@@ -457,10 +451,8 @@ struct audio_cal_info_lsm {
 struct audio_cal_info_voc_top {
 	int32_t		topology;
 	int32_t		acdb_id;
-#ifdef TOPOLOGY_SPECIFIC_CHANNEL_INFO
 	uint32_t	num_channels;
 	uint8_t		channel_mapping[VSS_NUM_CHANNELS_MAX];
-#endif
 };
 
 struct audio_cal_info_vocproc {
@@ -810,7 +802,6 @@ struct audio_cal_sp_th_vi_v_vali_param {
 	struct audio_cal_header				hdr;
 	struct audio_cal_type_sp_th_vi_v_vali_param	cal_type;
 };
-
 struct audio_cal_type_sp_ex_vi_param {
 	struct audio_cal_type_header			cal_hdr;
 	struct audio_cal_data				cal_data;
@@ -821,16 +812,4 @@ struct audio_cal_sp_ex_vi_param {
 	struct audio_cal_header				hdr;
 	struct audio_cal_type_sp_ex_vi_param		cal_type;
 };
-
-struct audio_cal_type_sp_v4_ex_vi_param {
-	struct audio_cal_type_header			cal_hdr;
-	struct audio_cal_data				cal_data;
-	struct audio_cal_info_sp_v4_ex_vi_param		cal_info;
-};
-
-struct audio_cal_sp_v4_ex_vi_param {
-	struct audio_cal_header				hdr;
-	struct audio_cal_type_sp_v4_ex_vi_param		cal_type;
-};
-
 #endif /* _UAPI_MSM_AUDIO_CALIBRATION_H */

@@ -1,5 +1,13 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/* Copyright (c) 2018-2019, 2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #ifndef __MSM8953_H
@@ -7,8 +15,7 @@
 
 #include <sound/soc.h>
 #include <dsp/q6afe-v2.h>
-#include <asoc/wcd-mbhc-v2.h>
-#include "codecs/sdm660_cdc/msm-analog-cdc.h"
+#include "codecs/wcd-mbhc-v2.h"
 #include "codecs/sdm660_cdc/msm-digital-cdc.h"
 #include "codecs/wsa881x-analog.h"
 #include <linux/regulator/consumer.h>
@@ -49,14 +56,6 @@ enum {
 	MI2S_MAX,
 };
 
-enum {
-	INT_SND_CARD,
-	INT_DIG_SND_CARD,
-	INT_MAX_SND_CARD = INT_DIG_SND_CARD,
-	EXT_SND_CARD_TASHA,
-	EXT_SND_CARD_TAVIL,
-};
-
 struct msm_asoc_mach_data {
 	int codec_type;
 	int ext_pa;
@@ -81,7 +80,6 @@ struct msm_asoc_mach_data {
 	void __iomem *vaddr_gpio_mux_mic_ctl;
 	void __iomem *vaddr_gpio_mux_quin_ctl;
 	void __iomem *vaddr_gpio_mux_pcm_ctl;
-	struct on_demand_supply wsa_switch_supply;
 	struct device_node *spk_ext_pa_gpio_p;
 	struct device_node *us_euro_gpio_p;
 	struct device_node *comp_gpio_p;

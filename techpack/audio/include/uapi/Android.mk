@@ -1,5 +1,6 @@
 # Use this by setting
 #   LOCAL_HEADER_LIBRARIES := audio_kernel_headers
+ifeq ($(SOMC_KERNEL_VERSION),4.14)
 
 LOCAL_PATH := $(call my-dir)
 MYLOCAL_PATH := $(LOCAL_PATH)
@@ -15,7 +16,6 @@ BUILD_ROOT_RELATIVE := ../../../../../../../
 include $(CLEAR_VARS)
 LOCAL_MODULE                  := audio_kernel_headers
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_PREBUILT_INT_KERNEL)
-LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 
 GEN := $(addprefix $(UAPI_OUT)/,$(AUDIO_KERNEL_HEADERS))
 $(GEN): $(KERNEL_USR)
@@ -28,3 +28,4 @@ LOCAL_GENERATED_SOURCES := $(GEN)
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(UAPI_OUT)
 
 include $(BUILD_HEADER_LIBRARY)
+endif
