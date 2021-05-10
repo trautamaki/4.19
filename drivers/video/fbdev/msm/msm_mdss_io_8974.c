@@ -1,5 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2012-2018, 2020-2021, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2012-2018, 2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 #include <linux/clk.h>
 #include <linux/interrupt.h>
 #include <linux/delay.h>
@@ -433,7 +443,7 @@ void mdss_dsi_dfps_config_8996(struct mdss_dsi_ctrl_pdata *ctrl)
 	wmb(); /* make sure phy timings are updated*/
 }
 
-void mdss_dsi_ctrl_phy_reset(struct mdss_dsi_ctrl_pdata *ctrl)
+static void mdss_dsi_ctrl_phy_reset(struct mdss_dsi_ctrl_pdata *ctrl)
 {
 	/* start phy sw reset */
 	MIPI_OUTP(ctrl->ctrl_base + 0x12c, 0x0001);
@@ -627,8 +637,9 @@ void mdss_dsi_lp_cd_rx(struct mdss_dsi_ctrl_pdata *ctrl)
 		return;
 
 	pd = &(((ctrl->panel_data).panel_info.mipi).dsi_phy_db);
-	MIPI_OUTP((ctrl->phy_io.base) + 0x0188, pd->strength[1]);
+
 	/* Strength ctrl 1, LP Rx + CD Rxcontention detection */
+	MIPI_OUTP((ctrl->phy_io.base) + 0x0188, pd->strength[1]);
 	wmb();
 }
 
@@ -636,7 +647,6 @@ static void mdss_dsi_28nm_phy_regulator_enable(
 		struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	struct mdss_dsi_phy_ctrl *pd;
-
 	pd = &(((ctrl_pdata->panel_data).panel_info.mipi).dsi_phy_db);
 
 	if (pd->regulator_len == 0) {
@@ -728,7 +738,6 @@ static void mdss_dsi_28nm_phy_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	off = 0x0140;	/* phy timing ctrl 0 - 11 */
 	for (i = 0; i < 12; i++) {
 		MIPI_OUTP((ctrl_pdata->phy_io.base) + off, pd->timing[i]);
-		/* make sure phy timing register is programed */
 		wmb();
 		off += 4;
 	}
@@ -741,14 +750,13 @@ static void mdss_dsi_28nm_phy_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 			offset = i + (ln * 9);
 			MIPI_OUTP((ctrl_pdata->phy_io.base) + off,
 							pd->lanecfg[offset]);
-			/* make sure lane config register is programed */
 			wmb();
 			off += 4;
 		}
 	}
 
-	MIPI_OUTP((ctrl_pdata->phy_io.base) + 0x0180, 0x0a);
 	/* MMSS_DSI_0_PHY_DSIPHY_CTRL_4 */
+	MIPI_OUTP((ctrl_pdata->phy_io.base) + 0x0180, 0x0a);
 	wmb();
 
 	/* DSI_0_PHY_DSIPHY_GLBL_TEST_CTRL */
@@ -772,7 +780,6 @@ static void mdss_dsi_28nm_phy_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	off = 0x01b4;	/* phy BIST ctrl 0 - 5 */
 	for (i = 0; i < 6; i++) {
 		MIPI_OUTP((ctrl_pdata->phy_io.base) + off, pd->bistctrl[i]);
-		/* make sure PHY bit control is configured */
 		wmb();
 		off += 4;
 	}
@@ -862,7 +869,6 @@ static void mdss_dsi_20nm_phy_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 			offset = i + (ln * 9);
 			MIPI_OUTP((ctrl_pdata->phy_io.base) + off,
 				pd->lanecfg[offset]);
-			/* make sure lane config register is programed */
 			wmb();
 			off += 4;
 		}
@@ -872,7 +878,7 @@ static void mdss_dsi_20nm_phy_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	for (i = 0; i < 12; i++) {
 		MIPI_OUTP((ctrl_pdata->phy_io.base) +
 			MDSS_DSI_DSIPHY_TIMING_CTRL_0 + off, pd->timing[i]);
-		wmb(); /* make sure phy timing register is programed */
+		wmb();
 		off += 4;
 	}
 
@@ -1329,12 +1335,12 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 			 */
 			if (!mdss_dsi_is_hw_config_dual(sdata) ||
 				(other_ctrl && (!other_ctrl->is_phyreg_enabled
-					|| other_ctrl->mmss_clamp)))
+						|| other_ctrl->mmss_clamp)))
 				mdss_dsi_28nm_phy_regulator_enable(ctrl);
-			break;
+				break;
 			}
 		}
-		ctrl->is_phyreg_enabled = true;
+		ctrl->is_phyreg_enabled = 1;
 	} else {
 		/*
 		 * In split-dsi/dual-dsi configuration, the dsi phy regulator
@@ -1348,7 +1354,7 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 		} else {
 			mdss_dsi_phy_regulator_disable(ctrl);
 		}
-		ctrl->is_phyreg_enabled = false;
+		ctrl->is_phyreg_enabled = 0;
 	}
 	mutex_unlock(&sdata->phy_reg_lock);
 }
@@ -1356,7 +1362,6 @@ static void mdss_dsi_phy_regulator_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 static void mdss_dsi_phy_ctrl(struct mdss_dsi_ctrl_pdata *ctrl, bool enable)
 {
 	struct mdss_dsi_ctrl_pdata *other_ctrl;
-
 	if (!ctrl) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return;
@@ -1454,6 +1459,24 @@ static void mdss_dsi_phy_hstx_drv_ctrl(
 
 void mdss_dsi_core_clk_deinit(struct device *dev, struct dsi_shared_data *sdata)
 {
+	if (sdata->mmss_misc_ahb_clk)
+		devm_clk_put(dev, sdata->mmss_misc_ahb_clk);
+	if (sdata->ext_pixel1_clk)
+		devm_clk_put(dev, sdata->ext_pixel1_clk);
+	if (sdata->ext_byte1_clk)
+		devm_clk_put(dev, sdata->ext_byte1_clk);
+	if (sdata->ext_pixel0_clk)
+		devm_clk_put(dev, sdata->ext_pixel0_clk);
+	if (sdata->ext_byte0_clk)
+		devm_clk_put(dev, sdata->ext_byte0_clk);
+	if (sdata->axi_clk)
+		devm_clk_put(dev, sdata->axi_clk);
+	if (sdata->ahb_clk)
+		devm_clk_put(dev, sdata->ahb_clk);
+	if (sdata->mnoc_clk)
+		devm_clk_put(dev, sdata->mnoc_clk);
+	if (sdata->mdp_core_clk)
+		devm_clk_put(dev, sdata->mdp_core_clk);
 }
 
 int mdss_dsi_clk_refresh(struct mdss_panel_data *pdata, bool update_phy)
@@ -1623,6 +1646,20 @@ error:
 void mdss_dsi_link_clk_deinit(struct device *dev,
 	struct mdss_dsi_ctrl_pdata *ctrl)
 {
+	if (ctrl->byte_intf_clk)
+		devm_clk_put(dev, ctrl->byte_intf_clk);
+	if (ctrl->vco_dummy_clk)
+		devm_clk_put(dev, ctrl->vco_dummy_clk);
+	if (ctrl->pixel_clk_rcg)
+		devm_clk_put(dev, ctrl->pixel_clk_rcg);
+	if (ctrl->byte_clk_rcg)
+		devm_clk_put(dev, ctrl->byte_clk_rcg);
+	if (ctrl->byte_clk)
+		devm_clk_put(dev, ctrl->byte_clk);
+	if (ctrl->esc_clk)
+		devm_clk_put(dev, ctrl->esc_clk);
+	if (ctrl->pixel_clk)
+		devm_clk_put(dev, ctrl->pixel_clk);
 }
 
 int mdss_dsi_link_clk_init(struct platform_device *pdev,
@@ -1701,6 +1738,18 @@ error:
 void mdss_dsi_shadow_clk_deinit(struct device *dev,
 	struct mdss_dsi_ctrl_pdata *ctrl)
 {
+	if (ctrl->mux_byte_clk)
+		devm_clk_put(dev, ctrl->mux_byte_clk);
+	if (ctrl->mux_pixel_clk)
+		devm_clk_put(dev, ctrl->mux_pixel_clk);
+	if (ctrl->pll_byte_clk)
+		devm_clk_put(dev, ctrl->pll_byte_clk);
+	if (ctrl->pll_pixel_clk)
+		devm_clk_put(dev, ctrl->pll_pixel_clk);
+	if (ctrl->shadow_byte_clk)
+		devm_clk_put(dev, ctrl->shadow_byte_clk);
+	if (ctrl->shadow_pixel_clk)
+		devm_clk_put(dev, ctrl->shadow_pixel_clk);
 }
 
 int mdss_dsi_shadow_clk_init(struct platform_device *pdev,
@@ -2569,7 +2618,7 @@ int mdss_dsi_post_clkon_cb(void *priv,
 	}
 
 	if ((clk & MDSS_DSI_LINK_CLK) && (l_type == MDSS_DSI_LINK_LP_CLK)) {
-		if (ctrl->ulps) {
+		if (ctrl->ulps && mmss_clamp) {
 			/*
 			 * ULPS Entry Request. This is needed if the lanes were
 			 * in ULPS prior to power collapse, since after
@@ -2693,7 +2742,7 @@ int mdss_dsi_pre_clkon_cb(void *priv,
 	}
 
 	if ((clk_type & MDSS_DSI_CORE_CLK) && (new_state == MDSS_DSI_CLK_ON) &&
-	    (!ctrl->core_power)) {
+	    (ctrl->core_power == false)) {
 		sdata = ctrl->shared_data;
 		pdata = &ctrl->panel_data;
 		/*

@@ -1,5 +1,15 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/* Copyright (c) 2007-2020, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2007-2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #ifndef MDSS_SMMU_H
 #define MDSS_SMMU_H
@@ -121,7 +131,6 @@ static inline struct mdss_smmu_client *mdss_smmu_get_cb(u32 domain)
 static inline int is_mdss_iommu_attached(void)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	return mdata ? mdata->iommu_attached : false;
 }
 
@@ -214,7 +223,6 @@ static inline struct dma_buf_attachment *mdss_smmu_dma_buf_attach(
 		struct dma_buf *dma_buf, struct device *dev, int domain)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (!mdata || !mdata->smmu_ops.smmu_dma_buf_attach)
 		return NULL;
 
@@ -226,7 +234,6 @@ static inline int mdss_smmu_map_dma_buf(struct dma_buf *dma_buf,
 		unsigned long *size, int dir)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (!mdata->smmu_ops.smmu_map_dma_buf)
 		return -ENODEV;
 
@@ -239,7 +246,6 @@ static inline void mdss_smmu_unmap_dma_buf(struct sg_table *table, int domain,
 		int dir, struct dma_buf *dma_buf)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (mdata->smmu_ops.smmu_unmap_dma_buf)
 		mdata->smmu_ops.smmu_unmap_dma_buf(table, domain,
 		mdss_smmu_dma_data_direction(dir), dma_buf);
@@ -250,7 +256,6 @@ static inline int mdss_smmu_dma_alloc_coherent(struct device *dev, size_t size,
 		gfp_t gfp, int domain)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (!mdata || !mdata->smmu_ops.smmu_dma_alloc_coherent)
 		return -ENODEV;
 
@@ -262,7 +267,6 @@ static inline void mdss_smmu_dma_free_coherent(struct device *dev, size_t size,
 		void *cpu_addr, dma_addr_t phys, dma_addr_t iova, int domain)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (mdata && mdata->smmu_ops.smmu_dma_free_coherent)
 		mdata->smmu_ops.smmu_dma_free_coherent(dev, size, cpu_addr,
 			phys, iova, domain);
@@ -272,7 +276,6 @@ static inline int mdss_smmu_map(int domain, phys_addr_t iova, phys_addr_t phys,
 		int gfp_order, int prot)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (!mdata->smmu_ops.smmu_map)
 		return -ENODEV;
 
@@ -283,7 +286,6 @@ static inline void mdss_smmu_unmap(int domain, unsigned long iova,
 		int gfp_order)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (mdata->smmu_ops.smmu_unmap)
 		mdata->smmu_ops.smmu_unmap(domain, iova, gfp_order);
 }
@@ -292,7 +294,6 @@ static inline char *mdss_smmu_dsi_alloc_buf(struct device *dev, int size,
 		dma_addr_t *dmap, gfp_t gfp)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (!mdata->smmu_ops.smmu_dsi_alloc_buf)
 		return NULL;
 
@@ -304,7 +305,6 @@ static inline int mdss_smmu_dsi_map_buffer(phys_addr_t phys,
 		void *cpu_addr, int dir)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (!mdata->smmu_ops.smmu_dsi_map_buffer)
 		return -ENODEV;
 
@@ -317,7 +317,6 @@ static inline void mdss_smmu_dsi_unmap_buffer(dma_addr_t dma_addr, int domain,
 		unsigned long size, int dir)
 {
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
-
 	if (mdata->smmu_ops.smmu_dsi_unmap_buffer)
 		mdata->smmu_ops.smmu_dsi_unmap_buffer(dma_addr, domain,
 			size, mdss_smmu_dma_data_direction(dir));
