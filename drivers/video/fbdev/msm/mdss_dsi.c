@@ -1,5 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2012-2021, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #include <linux/module.h>
 #include <linux/interrupt.h>
@@ -23,7 +33,6 @@
 #include "mdss_debug.h"
 #include "mdss_dsi_phy.h"
 #include "mdss_dba_utils.h"
-#include "mdss_livedisplay.h"
 
 #define CMDLINE_DSI_CTL_NUM_STRING_LEN 2
 
@@ -160,7 +169,7 @@ static void mdss_dsi_pm_qos_remove_request(struct dsi_shared_data *sdata)
 	if (sdata->pm_qos_req_cnt) {
 		sdata->pm_qos_req_cnt--;
 		if (!sdata->pm_qos_req_cnt) {
-			pr_debug("%s: remove request\n", __func__);
+			pr_debug("%s: remove request", __func__);
 			pm_qos_remove_request(&mdss_dsi_pm_qos_request);
 		}
 	} else {
@@ -171,7 +180,7 @@ static void mdss_dsi_pm_qos_remove_request(struct dsi_shared_data *sdata)
 
 static void mdss_dsi_pm_qos_update_request(int val)
 {
-	pr_debug("%s: update request %d\n", __func__, val);
+	pr_debug("%s: update request %d", __func__, val);
 	pm_qos_update_request(&mdss_dsi_pm_qos_request, val);
 }
 
@@ -221,7 +230,7 @@ static void mdss_dsi_config_clk_src(struct platform_device *pdev)
 			return;
 		}
 
-		pr_debug("%s:default: DSI0 <--> PLL0, DSI1 <--> %s\n", __func__,
+		pr_debug("%s: default: DSI0 <--> PLL0, DSI1 <--> %s", __func__,
 			mdss_dsi_is_hw_config_split(sdata) ? "PLL0" : "PLL1");
 	} else {
 		/*
@@ -233,12 +242,12 @@ static void mdss_dsi_config_clk_src(struct platform_device *pdev)
 		 * board configuration.
 		 */
 		if (mdss_dsi_is_pll_src_pll0(sdata)) {
-			pr_debug("%s: single source: PLL0\n", __func__);
+			pr_debug("%s: single source: PLL0", __func__);
 			sdata->byte0_parent = sdata->ext_byte0_clk;
 			sdata->pixel0_parent = sdata->ext_pixel0_clk;
 		} else if (mdss_dsi_is_pll_src_pll1(sdata)) {
 			if (sdata->ext_byte1_clk && sdata->ext_pixel1_clk) {
-				pr_debug("%s: single source: PLL1\n", __func__);
+				pr_debug("%s: single source: PLL1", __func__);
 				sdata->byte0_parent = sdata->ext_byte1_clk;
 				sdata->pixel0_parent = sdata->ext_pixel1_clk;
 			} else {
@@ -250,6 +259,8 @@ static void mdss_dsi_config_clk_src(struct platform_device *pdev)
 		sdata->byte1_parent = sdata->byte0_parent;
 		sdata->pixel1_parent = sdata->pixel0_parent;
 	}
+
+	return;
 }
 
 static char const *mdss_dsi_get_clk_src(struct mdss_dsi_ctrl_pdata *ctrl)
@@ -316,7 +327,7 @@ static int mdss_dsi_set_clk_src(struct mdss_dsi_ctrl_pdata *ctrl)
 		goto error;
 	}
 
-	pr_debug("%s: ctrl%d clock source set to %s\n", __func__, ctrl->ndx,
+	pr_debug("%s: ctrl%d clock source set to %s", __func__, ctrl->ndx,
 		mdss_dsi_get_clk_src(ctrl));
 
 error:
@@ -498,6 +509,10 @@ void mdss_dsi_put_dt_vreg_data(struct device *dev,
 		return;
 	}
 
+	if (module_power->vreg_config) {
+		devm_kfree(dev, module_power->vreg_config);
+		module_power->vreg_config = NULL;
+	}
 	module_power->num_vreg = 0;
 }
 
@@ -667,6 +682,10 @@ int mdss_dsi_get_dt_vreg_data(struct device *dev,
 	return rc;
 
 error:
+	if (mp->vreg_config) {
+		devm_kfree(dev, mp->vreg_config);
+		mp->vreg_config = NULL;
+	}
 novreg:
 	mp->num_vreg = 0;
 
@@ -732,9 +751,9 @@ static ssize_t mdss_dsi_cmd_state_read(struct file *file, char __user *buf,
 		return 0;
 
 	if ((*link_state) == DSI_HS_MODE)
-		blen = scnprintf(buffer, sizeof(buffer), "dsi_hs_mode\n");
+		blen = snprintf(buffer, sizeof(buffer), "dsi_hs_mode\n");
 	else
-		blen = scnprintf(buffer, sizeof(buffer), "dsi_lp_mode\n");
+		blen = snprintf(buffer, sizeof(buffer), "dsi_lp_mode\n");
 
 	if (blen < 0)
 		return 0;
@@ -757,10 +776,14 @@ static ssize_t mdss_dsi_cmd_state_write(struct file *file,
 		return -EINVAL;
 	}
 
-	input = memdup_user(p, count);
-	if (IS_ERR(input))
-		return PTR_ERR(input);
+	input = kmalloc(count, GFP_KERNEL);
+	if (!input)
+		return -ENOMEM;
 
+	if (copy_from_user(input, p, count)) {
+		kfree(input);
+		return -EFAULT;
+	}
 	input[count-1] = '\0';
 
 	if (strnstr(input, "dsi_hs_mode", strlen("dsi_hs_mode")))
@@ -821,16 +844,15 @@ static ssize_t mdss_dsi_cmd_read(struct file *file, char __user *buf,
 					*((struct dsi_ctrl_hdr *)bp);
 			int dhrlen = sizeof(dchdr), dlen;
 			char *tmp = (char *)(&dchdr);
-
 			dlen = dchdr.dlen;
 			dchdr.dlen = htons(dchdr.dlen);
 			while (dhrlen--)
-				blen += scnprintf(buffer+blen, bsize-blen,
+				blen += snprintf(buffer+blen, bsize-blen,
 						 "%02x ", (*tmp++));
 
 			bp += sizeof(dchdr);
 			while (dlen--)
-				blen += scnprintf(buffer+blen, bsize-blen,
+				blen += snprintf(buffer+blen, bsize-blen,
 						 "%02x ", (*bp++));
 			buffer[blen-1] = '\n';
 		}
@@ -935,7 +957,6 @@ static int mdss_dsi_cmd_flush(struct file *file, fl_owner_t id)
 	for (i = 0; i < blen; i++) {
 		uint32_t value = 0;
 		int step = 0;
-
 		if (sscanf(bufp, "%02x%n", &value, &step) > 0) {
 			*(buf+i) = (char)value;
 			bufp += step;
@@ -1092,7 +1113,6 @@ static void mdss_dsi_debugfs_cleanup(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 		struct mdss_dsi_ctrl_pdata *ctrl = container_of(pdata,
 			struct mdss_dsi_ctrl_pdata, panel_data);
 		struct mdss_dsi_debugfs_info *dfs = ctrl->debugfs_info;
-
 		if (dfs && dfs->root)
 			debugfs_remove_recursive(dfs->root);
 		kfree(dfs);
@@ -1425,6 +1445,7 @@ static int mdss_dsi_reconfig(struct mdss_panel_data *pdata, int mode)
 static int mdss_dsi_update_panel_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata,
 				int mode)
 {
+	int ret = 0;
 	struct mdss_panel_info *pinfo = &(ctrl_pdata->panel_data.panel_info);
 
 	if (mode == DSI_CMD_MODE) {
@@ -1444,7 +1465,7 @@ static int mdss_dsi_update_panel_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata,
 	ctrl_pdata->panel_mode = pinfo->mipi.mode;
 	mdss_panel_get_dst_fmt(pinfo->bpp, pinfo->mipi.mode,
 			pinfo->mipi.pixel_packing, &(pinfo->mipi.dst_format));
-	return 0;
+	return ret;
 }
 
 int mdss_dsi_on(struct mdss_panel_data *pdata)
@@ -1756,7 +1777,8 @@ static int mdss_dsi_blank(struct mdss_panel_data *pdata, int power_state)
 			ATRACE_BEGIN("dsi_panel_off");
 			ret = ctrl_pdata->off(pdata);
 			if (ret) {
-				pr_err("%s: Panel OFF failed\n", __func__);
+				pr_err("%s: Panel OFF failed\n",
+					__func__);
 				goto error;
 			}
 			ATRACE_END("dsi_panel_off");
@@ -2180,7 +2202,7 @@ static int __mdss_dsi_dfps_update_clks(struct mdss_panel_data *pdata)
 
 	rc = mdss_dsi_en_wait4dynamic_done(ctrl_pdata);
 	if (rc < 0) {
-		pr_err("Unsuccessful dynamic fps change\n");
+		pr_err("Unsuccessful dynamic fps change");
 		goto dfps_timeout;
 	}
 
@@ -2754,7 +2776,7 @@ static struct mdss_dsi_ctrl_pdata *mdss_dsi_get_drvdata(struct device *dev)
 	return ctrl_pdata;
 }
 
-static ssize_t supported_bitclk_show(struct device *dev,
+static ssize_t supp_bitclk_list_sysfs_rda(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
 	ssize_t ret = 0;
@@ -2794,7 +2816,7 @@ static ssize_t supported_bitclk_show(struct device *dev,
 	return ret;
 }
 
-static ssize_t dynamic_bitclk_store(struct device *dev,
+static ssize_t dynamic_bitclk_sysfs_wta(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t count)
 {
 	int rc = 0, i = 0;
@@ -2850,7 +2872,7 @@ static ssize_t dynamic_bitclk_store(struct device *dev,
 	return count;
 } /* dynamic_bitclk_sysfs_wta */
 
-static ssize_t dynamic_bitclk_show(struct device *dev,
+static ssize_t dynamic_bitclk_sysfs_rda(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
 	ssize_t ret;
@@ -2868,14 +2890,15 @@ static ssize_t dynamic_bitclk_show(struct device *dev,
 		return -ENODEV;
 	}
 
-	ret = scnprintf(buf, PAGE_SIZE, "%llu\n", pinfo->clk_rate);
+	ret = snprintf(buf, PAGE_SIZE, "%llu\n", pinfo->clk_rate);
 	pr_debug("%s: '%llu'\n", __func__, pinfo->clk_rate);
 
 	return ret;
 } /* dynamic_bitclk_sysfs_rda */
 
-static DEVICE_ATTR_RW(dynamic_bitclk);
-static DEVICE_ATTR_RO(supported_bitclk);
+static DEVICE_ATTR(dynamic_bitclk, 0664,
+	dynamic_bitclk_sysfs_rda, dynamic_bitclk_sysfs_wta);
+static DEVICE_ATTR(supported_bitclk, 0444, supp_bitclk_list_sysfs_rda, NULL);
 
 static struct attribute *dynamic_bitclk_fs_attrs[] = {
 	&dev_attr_dynamic_bitclk.attr,
@@ -3080,9 +3103,6 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 				pr_err("unable to change bitclk error-%d\n",
 					rc);
 		}
-		break;
-	case MDSS_EVENT_UPDATE_LIVEDISPLAY:
-		rc = mdss_livedisplay_update(ctrl_pdata, (int)(unsigned long) arg);
 		break;
 	default:
 		pr_debug("%s: unhandled event=%d\n", __func__, event);
@@ -3446,7 +3466,7 @@ static int mdss_dsi_cont_splash_config(struct mdss_panel_info *pinfo,
 				  MDSS_DSI_ALL_CLKS, MDSS_DSI_CLK_ON);
 		mdss_dsi_read_hw_revision(ctrl_pdata);
 		mdss_dsi_read_phy_revision(ctrl_pdata);
-		ctrl_pdata->is_phyreg_enabled = true;
+		ctrl_pdata->is_phyreg_enabled = 1;
 		if (pinfo->type == MIPI_CMD_PANEL)
 			mdss_dsi_set_burst_mode(ctrl_pdata);
 		mdss_dsi_clamp_phy_reset_config(ctrl_pdata, true);
@@ -3702,9 +3722,9 @@ static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 		ctrl_pdata->shared_data->dsi0_active = true;
 	else
 		ctrl_pdata->shared_data->dsi1_active = true;
-#ifdef CONFIG_DEBUG_FS
+
 	mdss_dsi_debug_bus_init(mdss_dsi_res);
-#endif
+
 	return 0;
 
 error_shadow_clk_deinit:
@@ -3796,6 +3816,8 @@ static void mdss_dsi_res_deinit(struct platform_device *pdev)
 				if (pinfo)
 					mdss_dba_utils_deinit(pinfo->dba_data);
 			}
+
+			devm_kfree(&pdev->dev, dsi_res->ctrl_pdata[i]);
 		}
 	}
 
@@ -3816,7 +3838,13 @@ static void mdss_dsi_res_deinit(struct platform_device *pdev)
 	mdss_dsi_bus_scale_deinit(sdata);
 	mdss_dsi_core_clk_deinit(&pdev->dev, sdata);
 
+	if (sdata)
+		devm_kfree(&pdev->dev, sdata);
+
 res_release:
+	if (dsi_res)
+		devm_kfree(&pdev->dev, dsi_res);
+
 	return;
 }
 
@@ -4032,8 +4060,9 @@ static void mdss_dsi_parse_pll_src_cfg(struct platform_device *pdev,
 		pr_debug("%s: PLL src config not specified\n", __func__);
 	}
 
-	pr_debug("%s: pll_src_config = %d\n", __func__, sdata->pll_src_config);
+	pr_debug("%s: pll_src_config = %d", __func__, sdata->pll_src_config);
 
+	return;
 }
 
 static int mdss_dsi_validate_pll_src_config(struct dsi_shared_data *sdata)

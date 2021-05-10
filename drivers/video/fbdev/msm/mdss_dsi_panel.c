@@ -1,5 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2012-2021, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 
 #include <linux/module.h>
 #include <linux/interrupt.h>
@@ -20,7 +29,6 @@
 #include "mdss_dsi.h"
 #include "mdss_dba_utils.h"
 #include "mdss_debug.h"
-#include "mdss_livedisplay.h"
 
 #define DT_CMD_HDR 6
 #define DEFAULT_MDP_TRANSFER_TIME 14000
@@ -37,9 +45,8 @@ void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 
 	ctrl->pwm_bl = pwm_request(ctrl->pwm_lpg_chan, "lcd-bklt");
 	if (ctrl->pwm_bl == NULL || IS_ERR(ctrl->pwm_bl)) {
-		pr_err("%s: Error: lpg_chan=%d pwm request failed\n",
+		pr_err("%s: Error: lpg_chan=%d pwm request failed",
 				__func__, ctrl->pwm_lpg_chan);
-		ctrl->pwm_bl = NULL;
 	}
 	ctrl->pwm_enabled = 0;
 }
@@ -47,7 +54,6 @@ void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 bool mdss_dsi_panel_pwm_enable(struct mdss_dsi_ctrl_pdata *ctrl)
 {
 	bool status = true;
-
 	if (!ctrl->pwm_enabled)
 		goto end;
 
@@ -180,7 +186,7 @@ static void mdss_dsi_panel_apply_settings(struct mdss_dsi_ctrl_pdata *ctrl,
 }
 
 
-void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
+static void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
 			struct dsi_panel_cmds *pcmds, u32 flags)
 {
 	struct dcs_cmd_req cmdreq;
@@ -963,10 +969,6 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	/* Ensure low persistence mode is set as before */
 	mdss_dsi_panel_apply_display_setting(pdata, pinfo->persist_mode);
 
-	if (pdata->event_handler)
-		pdata->event_handler(pdata, MDSS_EVENT_UPDATE_LIVEDISPLAY,
-				(void *)(unsigned long) MODE_UPDATE_ALL);
-
 end:
 	pr_debug("%s:-\n", __func__);
 	return ret;
@@ -991,7 +993,7 @@ static int mdss_dsi_post_panel_on(struct mdss_panel_data *pdata)
 
 	pinfo = &pdata->panel_info;
 	if (pinfo->dcs_cmd_by_left && ctrl->ndx != DSI_CTRL_LEFT)
-		goto end;
+			goto end;
 
 	cmds = &ctrl->post_panel_on_cmds;
 	if (cmds->cmd_cnt) {
@@ -1160,7 +1162,7 @@ static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 		dchdr = (struct dsi_ctrl_hdr *)bp;
 		dchdr->dlen = ntohs(dchdr->dlen);
 		if (dchdr->dlen > len) {
-			pr_err("%s: dtsi cmd=%x error, len=%d\n",
+			pr_err("%s: dtsi cmd=%x error, len=%d",
 				__func__, dchdr->dtype, dchdr->dlen);
 			goto exit_free;
 		}
@@ -1172,7 +1174,7 @@ static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 	}
 
 	if (len != 0) {
-		pr_err("%s: dcs_cmd=%x len=%d error!\n",
+		pr_err("%s: dcs_cmd=%x len=%d error!",
 				__func__, buf[0], blen);
 		goto exit_free;
 	}
@@ -1224,7 +1226,6 @@ int mdss_panel_get_dst_fmt(u32 bpp, char mipi_mode, u32 pixel_packing,
 				char *dst_format)
 {
 	int rc = 0;
-
 	switch (bpp) {
 	case 3:
 		*dst_format = DSI_CMD_DST_FORMAT_RGB111;
@@ -1409,7 +1410,7 @@ static int mdss_dsi_parse_hdr_settings(struct device_node *np,
 				hdr_prop->display_primaries,
 				DISPLAY_PRIMARIES_COUNT);
 		if (rc) {
-			pr_info("%s:%d, Unable to read color primaries,rc:%u\n",
+			pr_info("%s:%d, Unable to read color primaries,rc:%u",
 					__func__, __LINE__,
 					hdr_prop->hdr_enabled = false);
 			}
@@ -1418,7 +1419,7 @@ static int mdss_dsi_parse_hdr_settings(struct device_node *np,
 			"qcom,mdss-dsi-panel-peak-brightness",
 			&(hdr_prop->peak_brightness));
 		if (rc) {
-			pr_info("%s:%d, Unable to read hdr brightness, rc:%u\n",
+			pr_info("%s:%d, Unable to read hdr brightness, rc:%u",
 				__func__, __LINE__, rc);
 			hdr_prop->hdr_enabled = false;
 		}
@@ -1427,7 +1428,7 @@ static int mdss_dsi_parse_hdr_settings(struct device_node *np,
 			"qcom,mdss-dsi-panel-blackness-level",
 			&(hdr_prop->blackness_level));
 		if (rc) {
-			pr_info("%s:%d, Unable to read hdr brightness, rc:%u\n",
+			pr_info("%s:%d, Unable to read hdr brightness, rc:%u",
 				__func__, __LINE__, rc);
 			hdr_prop->hdr_enabled = false;
 		}
@@ -1851,29 +1852,29 @@ static int mdss_dsi_nt35596_read_status(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 		pr_err("%s: Read back value from panel is incorrect\n",
 							__func__);
 		return -EINVAL;
-	}
-
-	if (!mdss_dsi_cmp_panel_reg(ctrl_pdata->status_buf,
-		ctrl_pdata->status_value, 3)) {
-		ctrl_pdata->status_error_count = 0;
 	} else {
-		if (mdss_dsi_cmp_panel_reg(ctrl_pdata->status_buf,
-			ctrl_pdata->status_value, 4) ||
-			mdss_dsi_cmp_panel_reg(ctrl_pdata->status_buf,
-			ctrl_pdata->status_value, 5))
+		if (!mdss_dsi_cmp_panel_reg(ctrl_pdata->status_buf,
+			ctrl_pdata->status_value, 3)) {
 			ctrl_pdata->status_error_count = 0;
-		else
-			ctrl_pdata->status_error_count++;
-		if (ctrl_pdata->status_error_count >=
-				ctrl_pdata->max_status_error_count) {
-			ctrl_pdata->status_error_count = 0;
-			pr_err("%s: Read value bad. Error_cnt = %i\n",
-				 __func__,
-				ctrl_pdata->status_error_count);
-			return -EINVAL;
+		} else {
+			if (mdss_dsi_cmp_panel_reg(ctrl_pdata->status_buf,
+				ctrl_pdata->status_value, 4) ||
+				mdss_dsi_cmp_panel_reg(ctrl_pdata->status_buf,
+				ctrl_pdata->status_value, 5))
+				ctrl_pdata->status_error_count = 0;
+			else
+				ctrl_pdata->status_error_count++;
+			if (ctrl_pdata->status_error_count >=
+					ctrl_pdata->max_status_error_count) {
+				ctrl_pdata->status_error_count = 0;
+				pr_err("%s: Read value bad. Error_cnt = %i\n",
+					 __func__,
+					ctrl_pdata->status_error_count);
+				return -EINVAL;
+			}
 		}
+		return 1;
 	}
-	return 1;
 }
 
 static void mdss_dsi_parse_roi_alignment(struct device_node *np,
@@ -1887,12 +1888,12 @@ static void mdss_dsi_parse_roi_alignment(struct device_node *np,
 	data = of_find_property(np, "qcom,panel-roi-alignment", &len);
 	len /= sizeof(u32);
 	if (!data || (len != 6)) {
-		pr_debug("%s: Panel roi alignment not found\n", __func__);
+		pr_debug("%s: Panel roi alignment not found", __func__);
 	} else {
 		int rc = of_property_read_u32_array(np,
 				"qcom,panel-roi-alignment", value, len);
 		if (rc)
-			pr_debug("%s: Error reading panel roi alignment values\n",
+			pr_debug("%s: Error reading panel roi alignment values",
 					__func__);
 		else {
 			timing->roi_alignment.xstart_pix_align = value[0];
@@ -1903,7 +1904,7 @@ static void mdss_dsi_parse_roi_alignment(struct device_node *np,
 			timing->roi_alignment.min_height = value[5];
 		}
 
-		pr_debug("%s: ROI alignment: [%d, %d, %d, %d, %d, %d]\n",
+		pr_debug("%s: ROI alignment: [%d, %d, %d, %d, %d, %d]",
 			__func__, timing->roi_alignment.xstart_pix_align,
 			timing->roi_alignment.width_pix_align,
 			timing->roi_alignment.ystart_pix_align,
@@ -1972,6 +1973,7 @@ static void mdss_dsi_parse_dms_config(struct device_node *np,
 exit:
 	pr_info("%s: dynamic switch feature enabled: %d\n", __func__,
 		pinfo->mipi.dms_mode);
+	return;
 }
 
 /* the length of all the valid values to be checked should not be great
@@ -2153,6 +2155,9 @@ static void mdss_dsi_parse_partial_update_caps(struct device_node *np,
 	else if (data && !strcmp(data, "dual_roi"))
 		pinfo->partial_update_supported =
 			PU_DUAL_ROI;
+	else if (data && !strcmp(data, "none"))
+		pinfo->partial_update_supported =
+			PU_NOT_SUPPORTED;
 	else
 		pinfo->partial_update_supported =
 			PU_NOT_SUPPORTED;
@@ -2194,7 +2199,7 @@ static int mdss_dsi_parse_panel_features(struct device_node *np,
 
 	pinfo->ulps_suspend_enabled = of_property_read_bool(np,
 		"qcom,suspend-ulps-enabled");
-	pr_info("%s: ulps during suspend feature %s\n", __func__,
+	pr_info("%s: ulps during suspend feature %s", __func__,
 		(pinfo->ulps_suspend_enabled ? "enabled" : "disabled"));
 
 	mdss_dsi_parse_dms_config(np, ctrl);
@@ -2283,7 +2288,6 @@ static int mdss_dsi_set_refresh_rate_range(struct device_node *pan_node,
 		struct mdss_panel_info *pinfo)
 {
 	int rc = 0;
-
 	rc = of_property_read_u32(pan_node,
 			"qcom,mdss-dsi-min-refresh-rate",
 			&pinfo->min_fps);
@@ -2387,6 +2391,7 @@ dynamic_bitclk:
 		return;
 	}
 	pinfo->dynamic_bitclk = true;
+	return;
 }
 
 #ifdef CONFIG_BACKLIGHT_QCOM_SPMI_WLED
@@ -2609,7 +2614,7 @@ static int mdss_dsi_panel_timing_from_dt(struct device_node *np,
 
 	data = of_get_property(np, "qcom,mdss-dsi-panel-timings", &len);
 	if ((!data) || (len != 12)) {
-		pr_debug("%s:%d, Unable to read Phy timing settings\n",
+		pr_debug("%s:%d, Unable to read Phy timing settings",
 		       __func__, __LINE__);
 	} else {
 		for (i = 0; i < len; i++)
@@ -2619,7 +2624,7 @@ static int mdss_dsi_panel_timing_from_dt(struct device_node *np,
 
 	data = of_get_property(np, "qcom,mdss-dsi-panel-timings-phy-v2", &len);
 	if ((!data) || (len != 40)) {
-		pr_debug("%s:%d, Unable to read phy-v2 lane timing settings\n",
+		pr_debug("%s:%d, Unable to read phy-v2 lane timing settings",
 		       __func__, __LINE__);
 	} else {
 		for (i = 0; i < len; i++)
@@ -2630,7 +2635,7 @@ static int mdss_dsi_panel_timing_from_dt(struct device_node *np,
 	data = of_get_property(np,
 		"qcom,mdss-dsi-panel-timings-phy-12nm", &len);
 	if ((!data) || (len != 8)) {
-		pr_debug("%s:%d,Unable to read 12nm Phy lane timing settings\n",
+		pr_debug("%s:%d, Unable to read 12nm Phy lane timing settings",
 		       __func__, __LINE__);
 	} else {
 		for (i = 0; i < len; i++)
@@ -2706,7 +2711,6 @@ static int mdss_panel_parse_display_timings(struct device_node *np,
 	timings_np = of_get_child_by_name(np, "qcom,mdss-dsi-display-timings");
 	if (!timings_np) {
 		struct dsi_panel_timing pt;
-
 		memset(&pt, 0, sizeof(struct dsi_panel_timing));
 
 		/*
@@ -2796,7 +2800,7 @@ static int mdss_panel_parse_dt(struct device_node *np,
 	pinfo->bpp = (!rc ? tmp : 24);
 	pinfo->mipi.mode = DSI_VIDEO_MODE;
 	data = of_get_property(np, "qcom,mdss-dsi-panel-type", NULL);
-	if (data && !strcmp(data, "dsi_cmd_mode"))
+	if (data && !strncmp(data, "dsi_cmd_mode", 12))
 		pinfo->mipi.mode = DSI_CMD_MODE;
 	pinfo->mipi.boot_mode = pinfo->mipi.mode;
 	tmp = 0;
@@ -3020,8 +3024,6 @@ static int mdss_panel_parse_dt(struct device_node *np,
 	if (rc)
 		pinfo->esc_clk_rate_hz = MDSS_DSI_MAX_ESC_CLK_RATE_HZ;
 	pr_debug("%s: esc clk %d\n", __func__, pinfo->esc_clk_rate_hz);
-
-	mdss_livedisplay_parse_dt(np, pinfo);
 
 	return 0;
 

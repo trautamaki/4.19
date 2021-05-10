@@ -1,5 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2010-2018, 2020, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2010-2018, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
 
@@ -254,7 +263,7 @@ static void reset_hdcp_ddc_failures(struct hdcp_1x *hdcp)
 			pr_debug("%s: HDCP DDC Failure cleared\n",
 				HDCP_STATE_NAME);
 		else
-			pr_debug("%s: Unable to clear HDCP DDC Failure\n",
+			pr_debug("%s: Unable to clear HDCP DDC Failure",
 				HDCP_STATE_NAME);
 
 		/* Re-Enable HDCP DDC */
@@ -1508,7 +1517,7 @@ static struct hdcp_1x *hdcp_1x_get_ctrl(struct device *dev)
 error:
 	return NULL;
 }
-static ssize_t status_show(struct device *dev,
+static ssize_t hdcp_1x_sysfs_rda_status(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
 	ssize_t ret;
@@ -1520,14 +1529,14 @@ static ssize_t status_show(struct device *dev,
 	}
 
 	mutex_lock(hdcp->init_data.mutex);
-	ret = scnprintf(buf, PAGE_SIZE, "%d\n", hdcp->hdcp_state);
+	ret = snprintf(buf, PAGE_SIZE, "%d\n", hdcp->hdcp_state);
 	pr_debug("'%d'\n", hdcp->hdcp_state);
 	mutex_unlock(hdcp->init_data.mutex);
 
 	return ret;
 } /* hdcp_1x_sysfs_rda_hdcp*/
 
-static ssize_t tp_show(struct device *dev,
+static ssize_t hdcp_1x_sysfs_rda_tp(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
 	ssize_t ret = 0;
@@ -1560,7 +1569,7 @@ static ssize_t tp_show(struct device *dev,
 	return ret;
 } /* hdcp_1x_sysfs_rda_tp*/
 
-static ssize_t tp_store(struct device *dev,
+static ssize_t hdcp_1x_sysfs_wta_tp(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t count)
 {
 	int msgid = 0;
@@ -1587,8 +1596,9 @@ static ssize_t tp_store(struct device *dev,
 	return ret;
 } /* hdmi_tx_sysfs_wta_hpd */
 
-static DEVICE_ATTR_RO(status);
-static DEVICE_ATTR_RW(tp);
+static DEVICE_ATTR(status, 0444, hdcp_1x_sysfs_rda_status, NULL);
+static DEVICE_ATTR(tp, 0644, hdcp_1x_sysfs_rda_tp,
+	hdcp_1x_sysfs_wta_tp);
 
 static struct attribute *hdcp_1x_fs_attrs[] = {
 	&dev_attr_status.attr,
