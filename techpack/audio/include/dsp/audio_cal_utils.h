@@ -1,6 +1,14 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/*
- * Copyright (c) 2014, 2018, 2020 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
  */
 #ifndef _AUDIO_CAL_UTILS_H
 #define _AUDIO_CAL_UTILS_H
@@ -29,7 +37,6 @@ struct cal_block_data {
 	void			*cal_info;
 	struct list_head	list;
 	struct cal_data		cal_data;
-	bool			cal_stale;
 	struct mem_map_data	map_data;
 	int32_t			buffer_number;
 };
@@ -91,10 +98,4 @@ size_t get_user_cal_type_size(int32_t cal_type);
 
 /* Version of the cal type*/
 int32_t cal_utils_get_cal_type_version(void *cal_type_data);
-
-void cal_utils_mark_cal_used(struct cal_block_data *cal_block);
-
-bool cal_utils_is_cal_stale(struct cal_block_data *cal_block);
-
-int cal_utils_init(void);
 #endif

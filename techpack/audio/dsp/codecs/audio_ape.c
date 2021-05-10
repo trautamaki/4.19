@@ -1,5 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
  */
 
 #include <linux/types.h>
@@ -10,7 +19,6 @@
 static struct miscdevice audio_ape_misc;
 static struct ws_mgr audio_ape_ws_mgr;
 
-#ifdef CONFIG_DEBUG_FS
 static const struct file_operations audio_ape_debug_fops = {
 	.read = audio_aio_debug_read,
 	.open = audio_aio_debug_open,
@@ -20,7 +28,6 @@ static struct dentry *config_debugfs_create_file(const char *name, void *data)
 	return debugfs_create_file(name, S_IFREG | 0444,
 			NULL, (void *)data, &audio_ape_debug_fops);
 }
-#endif
 
 static long audio_ioctl_shared(struct file *file, unsigned int cmd,
 						void *arg)
@@ -307,12 +314,10 @@ static int audio_open(struct inode *inode, struct file *file)
 	}
 
 	snprintf(name, sizeof(name), "msm_ape_%04x", audio->ac->session);
-#ifdef CONFIG_DEBUG_FS
 	audio->dentry = config_debugfs_create_file(name, (void *)audio);
 
 	if (IS_ERR_OR_NULL(audio->dentry))
 		pr_debug("debugfs_create_file failed\n");
-#endif
 	pr_debug("%s:apedec success mode[%d]session[%d]\n", __func__,
 						audio->feedback,
 						audio->ac->session);

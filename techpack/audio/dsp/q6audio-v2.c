@@ -1,6 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/*
- * Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include <linux/slab.h>
@@ -46,7 +53,6 @@ int q6audio_get_port_index(u16 port_id)
 	case MI2S_RX: return IDX_MI2S_RX;
 	case MI2S_TX: return IDX_MI2S_TX;
 	case HDMI_RX: return IDX_HDMI_RX;
-	case HDMI_RX_MS: return IDX_HDMI_RX_MS;
 	case DISPLAY_PORT_RX: return IDX_DISPLAY_PORT_RX;
 	case AFE_PORT_ID_PRIMARY_SPDIF_RX: return IDX_PRIMARY_SPDIF_RX;
 	case AFE_PORT_ID_PRIMARY_SPDIF_TX: return IDX_PRIMARY_SPDIF_TX;
@@ -270,40 +276,6 @@ int q6audio_get_port_index(u16 port_id)
 		return IDX_AFE_PORT_ID_QUINARY_TDM_RX_7;
 	case AFE_PORT_ID_QUINARY_TDM_TX_7:
 		return IDX_AFE_PORT_ID_QUINARY_TDM_TX_7;
-	case AFE_PORT_ID_SENARY_TDM_RX:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_0;
-	case AFE_PORT_ID_SENARY_TDM_TX:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_0;
-	case AFE_PORT_ID_SENARY_TDM_RX_1:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_1;
-	case AFE_PORT_ID_SENARY_TDM_TX_1:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_1;
-	case AFE_PORT_ID_SENARY_TDM_RX_2:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_2;
-	case AFE_PORT_ID_SENARY_TDM_TX_2:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_2;
-	case AFE_PORT_ID_SENARY_TDM_RX_3:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_3;
-	case AFE_PORT_ID_SENARY_TDM_TX_3:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_3;
-	case AFE_PORT_ID_SENARY_TDM_RX_4:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_4;
-	case AFE_PORT_ID_SENARY_TDM_TX_4:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_4;
-	case AFE_PORT_ID_SENARY_TDM_RX_5:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_5;
-	case AFE_PORT_ID_SENARY_TDM_TX_5:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_5;
-	case AFE_PORT_ID_SENARY_TDM_RX_6:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_6;
-	case AFE_PORT_ID_SENARY_TDM_TX_6:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_6;
-	case AFE_PORT_ID_SENARY_TDM_RX_7:
-		return IDX_AFE_PORT_ID_SENARY_TDM_RX_7;
-	case AFE_PORT_ID_SENARY_TDM_TX_7:
-		return IDX_AFE_PORT_ID_SENARY_TDM_TX_7;
-	case AFE_PORT_ID_SENARY_MI2S_RX:
-		return IDX_AFE_PORT_ID_SENARY_MI2S_RX;
 	case AFE_PORT_ID_SENARY_MI2S_TX:
 		return IDX_AFE_PORT_ID_SENARY_MI2S_TX;
 	case AFE_PORT_ID_USB_RX:
@@ -338,10 +310,6 @@ int q6audio_get_port_index(u16 port_id)
 		return IDX_AFE_PORT_ID_INT6_MI2S_RX;
 	case AFE_PORT_ID_INT6_MI2S_TX:
 		return IDX_AFE_PORT_ID_INT6_MI2S_TX;
-	case AFE_PORT_ID_PRIMARY_META_MI2S_RX:
-		return IDX_AFE_PORT_ID_PRIMARY_META_MI2S_RX;
-	case AFE_PORT_ID_SECONDARY_META_MI2S_RX:
-		return IDX_AFE_PORT_ID_SECONDARY_META_MI2S_RX;
 	case AFE_PORT_ID_WSA_CODEC_DMA_RX_0:
 		return IDX_AFE_PORT_ID_WSA_CODEC_DMA_RX_0;
 	case AFE_PORT_ID_WSA_CODEC_DMA_TX_0:
@@ -356,8 +324,6 @@ int q6audio_get_port_index(u16 port_id)
 		return IDX_AFE_PORT_ID_VA_CODEC_DMA_TX_0;
 	case AFE_PORT_ID_VA_CODEC_DMA_TX_1:
 		return IDX_AFE_PORT_ID_VA_CODEC_DMA_TX_1;
-	case AFE_PORT_ID_VA_CODEC_DMA_TX_2:
-		return IDX_AFE_PORT_ID_VA_CODEC_DMA_TX_2;
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_0:
 		return IDX_AFE_PORT_ID_RX_CODEC_DMA_RX_0;
 	case AFE_PORT_ID_TX_CODEC_DMA_TX_0:
@@ -386,10 +352,6 @@ int q6audio_get_port_index(u16 port_id)
 		return IDX_AFE_PORT_ID_RX_CODEC_DMA_RX_6;
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_7:
 		return IDX_AFE_PORT_ID_RX_CODEC_DMA_RX_7;
-	case RT_PROXY_PORT_002_RX:
-		return IDX_RT_PROXY_PORT_002_RX;
-	case RT_PROXY_PORT_002_TX:
-		return IDX_RT_PROXY_PORT_002_TX;
 	default: return -EINVAL;
 	}
 }
@@ -428,8 +390,6 @@ int q6audio_get_port_id(u16 port_id)
 	case MI2S_RX: return AFE_PORT_ID_PRIMARY_MI2S_RX;
 	case MI2S_TX: return AFE_PORT_ID_PRIMARY_MI2S_TX;
 	case HDMI_RX: return AFE_PORT_ID_MULTICHAN_HDMI_RX;
-	case HDMI_RX_MS:
-		return AFE_PORT_ID_HDMI_MS;
 	case DISPLAY_PORT_RX:
 			return AFE_PORT_ID_HDMI_OVER_DP_RX;
 	case AFE_PORT_ID_PRIMARY_SPDIF_RX:
@@ -498,10 +458,6 @@ int q6audio_get_port_id(u16 port_id)
 			return AUDIO_PORT_ID_I2S_RX;
 	case AFE_PORT_ID_SECONDARY_MI2S_RX_SD1:
 			return AFE_PORT_ID_SECONDARY_MI2S_RX_SD1;
-	case AFE_PORT_ID_PRIMARY_META_MI2S_RX:
-			return AFE_PORT_ID_PRIMARY_META_MI2S_RX;
-	case AFE_PORT_ID_SECONDARY_META_MI2S_RX:
-			return AFE_PORT_ID_SECONDARY_META_MI2S_RX;
 	case AFE_PORT_ID_PRIMARY_TDM_RX:
 		return AFE_PORT_ID_PRIMARY_TDM_RX;
 	case AFE_PORT_ID_PRIMARY_TDM_TX:
@@ -662,40 +618,6 @@ int q6audio_get_port_id(u16 port_id)
 		return AFE_PORT_ID_QUINARY_TDM_RX_7;
 	case AFE_PORT_ID_QUINARY_TDM_TX_7:
 		return AFE_PORT_ID_QUINARY_TDM_TX_7;
-	case AFE_PORT_ID_SENARY_TDM_RX:
-		return AFE_PORT_ID_SENARY_TDM_RX;
-	case AFE_PORT_ID_SENARY_TDM_TX:
-		return AFE_PORT_ID_SENARY_TDM_TX;
-	case AFE_PORT_ID_SENARY_TDM_RX_1:
-		return AFE_PORT_ID_SENARY_TDM_RX_1;
-	case AFE_PORT_ID_SENARY_TDM_TX_1:
-		return AFE_PORT_ID_SENARY_TDM_TX_1;
-	case AFE_PORT_ID_SENARY_TDM_RX_2:
-		return AFE_PORT_ID_SENARY_TDM_RX_2;
-	case AFE_PORT_ID_SENARY_TDM_TX_2:
-		return AFE_PORT_ID_SENARY_TDM_TX_2;
-	case AFE_PORT_ID_SENARY_TDM_RX_3:
-		return AFE_PORT_ID_SENARY_TDM_RX_3;
-	case AFE_PORT_ID_SENARY_TDM_TX_3:
-		return AFE_PORT_ID_SENARY_TDM_TX_3;
-	case AFE_PORT_ID_SENARY_TDM_RX_4:
-		return AFE_PORT_ID_SENARY_TDM_RX_4;
-	case AFE_PORT_ID_SENARY_TDM_TX_4:
-		return AFE_PORT_ID_SENARY_TDM_TX_4;
-	case AFE_PORT_ID_SENARY_TDM_RX_5:
-		return AFE_PORT_ID_SENARY_TDM_RX_5;
-	case AFE_PORT_ID_SENARY_TDM_TX_5:
-		return AFE_PORT_ID_SENARY_TDM_TX_5;
-	case AFE_PORT_ID_SENARY_TDM_RX_6:
-		return AFE_PORT_ID_SENARY_TDM_RX_6;
-	case AFE_PORT_ID_SENARY_TDM_TX_6:
-		return AFE_PORT_ID_SENARY_TDM_TX_6;
-	case AFE_PORT_ID_SENARY_TDM_RX_7:
-		return AFE_PORT_ID_SENARY_TDM_RX_7;
-	case AFE_PORT_ID_SENARY_TDM_TX_7:
-		return AFE_PORT_ID_SENARY_TDM_TX_7;
-	case AFE_PORT_ID_SENARY_MI2S_RX:
-		return AFE_PORT_ID_SENARY_MI2S_RX;
 	case AFE_PORT_ID_SENARY_MI2S_TX:
 		return AFE_PORT_ID_SENARY_MI2S_TX;
 	case AFE_PORT_ID_USB_RX:
@@ -744,8 +666,6 @@ int q6audio_get_port_id(u16 port_id)
 		return AFE_PORT_ID_VA_CODEC_DMA_TX_0;
 	case AFE_PORT_ID_VA_CODEC_DMA_TX_1:
 		return AFE_PORT_ID_VA_CODEC_DMA_TX_1;
-	case AFE_PORT_ID_VA_CODEC_DMA_TX_2:
-		return AFE_PORT_ID_VA_CODEC_DMA_TX_2;
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_0:
 		return AFE_PORT_ID_RX_CODEC_DMA_RX_0;
 	case AFE_PORT_ID_TX_CODEC_DMA_TX_0:
@@ -774,10 +694,6 @@ int q6audio_get_port_id(u16 port_id)
 		return AFE_PORT_ID_RX_CODEC_DMA_RX_6;
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_7:
 		return AFE_PORT_ID_RX_CODEC_DMA_RX_7;
-	case RT_PROXY_PORT_002_RX:
-		return RT_PROXY_PORT_002_RX;
-	case RT_PROXY_PORT_002_TX:
-		return RT_PROXY_PORT_002_TX;
 	default:
 		pr_warn("%s: Invalid port_id %d\n", __func__, port_id);
 		return -EINVAL;
@@ -839,8 +755,6 @@ int q6audio_is_digital_pcm_interface(u16 port_id)
 	case AFE_PORT_ID_SECONDARY_MI2S_TX:
 	case AUDIO_PORT_ID_I2S_RX:
 	case AFE_PORT_ID_SECONDARY_MI2S_RX_SD1:
-	case AFE_PORT_ID_PRIMARY_META_MI2S_RX:
-	case AFE_PORT_ID_SECONDARY_META_MI2S_RX:
 	case AFE_PORT_ID_PRIMARY_TDM_RX:
 	case AFE_PORT_ID_PRIMARY_TDM_TX:
 	case AFE_PORT_ID_PRIMARY_TDM_RX_1:
@@ -921,23 +835,6 @@ int q6audio_is_digital_pcm_interface(u16 port_id)
 	case AFE_PORT_ID_QUINARY_TDM_TX_6:
 	case AFE_PORT_ID_QUINARY_TDM_RX_7:
 	case AFE_PORT_ID_QUINARY_TDM_TX_7:
-	case AFE_PORT_ID_SENARY_TDM_RX:
-	case AFE_PORT_ID_SENARY_TDM_TX:
-	case AFE_PORT_ID_SENARY_TDM_RX_1:
-	case AFE_PORT_ID_SENARY_TDM_TX_1:
-	case AFE_PORT_ID_SENARY_TDM_RX_2:
-	case AFE_PORT_ID_SENARY_TDM_TX_2:
-	case AFE_PORT_ID_SENARY_TDM_RX_3:
-	case AFE_PORT_ID_SENARY_TDM_TX_3:
-	case AFE_PORT_ID_SENARY_TDM_RX_4:
-	case AFE_PORT_ID_SENARY_TDM_TX_4:
-	case AFE_PORT_ID_SENARY_TDM_RX_5:
-	case AFE_PORT_ID_SENARY_TDM_TX_5:
-	case AFE_PORT_ID_SENARY_TDM_RX_6:
-	case AFE_PORT_ID_SENARY_TDM_TX_6:
-	case AFE_PORT_ID_SENARY_TDM_RX_7:
-	case AFE_PORT_ID_SENARY_TDM_TX_7:
-	case AFE_PORT_ID_SENARY_MI2S_RX:
 	case AFE_PORT_ID_SENARY_MI2S_TX:
 	case AFE_PORT_ID_INT0_MI2S_RX:
 	case AFE_PORT_ID_INT0_MI2S_TX:
@@ -960,7 +857,6 @@ int q6audio_is_digital_pcm_interface(u16 port_id)
 	case AFE_PORT_ID_WSA_CODEC_DMA_TX_2:
 	case AFE_PORT_ID_VA_CODEC_DMA_TX_0:
 	case AFE_PORT_ID_VA_CODEC_DMA_TX_1:
-	case AFE_PORT_ID_VA_CODEC_DMA_TX_2:
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_0:
 	case AFE_PORT_ID_TX_CODEC_DMA_TX_0:
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_1:
@@ -1019,7 +915,6 @@ int q6audio_validate_port(u16 port_id)
 	case MI2S_RX:
 	case MI2S_TX:
 	case HDMI_RX:
-	case HDMI_RX_MS:
 	case DISPLAY_PORT_RX:
 	case RSVD_2:
 	case RSVD_3:
@@ -1070,8 +965,6 @@ int q6audio_validate_port(u16 port_id)
 	case AFE_PORT_ID_QUINARY_MI2S_RX:
 	case AFE_PORT_ID_QUINARY_MI2S_TX:
 	case AFE_PORT_ID_SECONDARY_MI2S_RX_SD1:
-	case AFE_PORT_ID_PRIMARY_META_MI2S_RX:
-	case AFE_PORT_ID_SECONDARY_META_MI2S_RX:
 	case AFE_PORT_ID_PRIMARY_TDM_RX:
 	case AFE_PORT_ID_PRIMARY_TDM_TX:
 	case AFE_PORT_ID_PRIMARY_TDM_RX_1:
@@ -1152,23 +1045,6 @@ int q6audio_validate_port(u16 port_id)
 	case AFE_PORT_ID_QUINARY_TDM_TX_6:
 	case AFE_PORT_ID_QUINARY_TDM_RX_7:
 	case AFE_PORT_ID_QUINARY_TDM_TX_7:
-	case AFE_PORT_ID_SENARY_TDM_RX:
-	case AFE_PORT_ID_SENARY_TDM_TX:
-	case AFE_PORT_ID_SENARY_TDM_RX_1:
-	case AFE_PORT_ID_SENARY_TDM_TX_1:
-	case AFE_PORT_ID_SENARY_TDM_RX_2:
-	case AFE_PORT_ID_SENARY_TDM_TX_2:
-	case AFE_PORT_ID_SENARY_TDM_RX_3:
-	case AFE_PORT_ID_SENARY_TDM_TX_3:
-	case AFE_PORT_ID_SENARY_TDM_RX_4:
-	case AFE_PORT_ID_SENARY_TDM_TX_4:
-	case AFE_PORT_ID_SENARY_TDM_RX_5:
-	case AFE_PORT_ID_SENARY_TDM_TX_5:
-	case AFE_PORT_ID_SENARY_TDM_RX_6:
-	case AFE_PORT_ID_SENARY_TDM_TX_6:
-	case AFE_PORT_ID_SENARY_TDM_RX_7:
-	case AFE_PORT_ID_SENARY_TDM_TX_7:
-	case AFE_PORT_ID_SENARY_MI2S_RX:
 	case AFE_PORT_ID_SENARY_MI2S_TX:
 	case AFE_PORT_ID_USB_RX:
 	case AFE_PORT_ID_USB_TX:
@@ -1193,7 +1069,6 @@ int q6audio_validate_port(u16 port_id)
 	case AFE_PORT_ID_WSA_CODEC_DMA_TX_2:
 	case AFE_PORT_ID_VA_CODEC_DMA_TX_0:
 	case AFE_PORT_ID_VA_CODEC_DMA_TX_1:
-	case AFE_PORT_ID_VA_CODEC_DMA_TX_2:
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_0:
 	case AFE_PORT_ID_TX_CODEC_DMA_TX_0:
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_1:
@@ -1208,8 +1083,6 @@ int q6audio_validate_port(u16 port_id)
 	case AFE_PORT_ID_TX_CODEC_DMA_TX_5:
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_6:
 	case AFE_PORT_ID_RX_CODEC_DMA_RX_7:
-	case RT_PROXY_PORT_002_RX:
-	case RT_PROXY_PORT_002_TX:
 	{
 		ret = 0;
 		break;

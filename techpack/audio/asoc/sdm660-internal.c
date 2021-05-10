@@ -1,6 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/*
- * Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015-2018, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include <linux/of_gpio.h>
@@ -8,8 +15,8 @@
 #include <linux/module.h>
 #include <sound/pcm_params.h>
 #include "msm-pcm-routing-v2.h"
-#include <asoc/sdm660-common.h>
-#include <asoc/msm-cdc-pinctrl.h>
+#include "sdm660-common.h"
+#include "codecs/msm-cdc-pinctrl.h"
 #include "codecs/sdm660_cdc/msm-digital-cdc.h"
 #include "codecs/sdm660_cdc/msm-analog-cdc.h"
 #include "codecs/msm_sdw/msm_sdw.h"
@@ -41,6 +48,18 @@ enum {
 	BT_SLIM7,
 	FM_SLIM8,
 	SLIM_MAX,
+};
+
+/*TDM default offset currently only supporting TDM_RX_0 and TDM_TX_0 */
+static unsigned int tdm_slot_offset[TDM_PORT_MAX][TDM_SLOT_OFFSET_MAX] = {
+	{0, 4, 8, 12, 16, 20, 24, 28},/* TX_0 | RX_0 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_1 | RX_1 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_2 | RX_2 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_3 | RX_3 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_4 | RX_4 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_5 | RX_5 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_6 | RX_6 */
+	{AFE_SLOT_MAPPING_OFFSET_INVALID},/* TX_7 | RX_7 */
 };
 
 static struct afe_clk_set int_mi2s_clk[INT_MI2S_MAX] = {
@@ -102,6 +121,12 @@ static struct afe_clk_set int_mi2s_clk[INT_MI2S_MAX] = {
 	},
 };
 
+struct dev_config {
+	u32 sample_rate;
+	u32 bit_format;
+	u32 channels;
+};
+
 /* Default configuration of MI2S channels */
 static struct dev_config int_mi2s_cfg[] = {
 	[INT0_MI2S] = {SAMPLING_RATE_48KHZ, SNDRV_PCM_FORMAT_S16_LE, 2},
@@ -148,8 +173,8 @@ static SOC_ENUM_SINGLE_EXT_DECL(bt_sample_rate, bt_sample_rate_text);
 
 static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 			  struct snd_kcontrol *kcontrol, int event);
-static int msm_int_enable_dig_cdc_clk(struct snd_soc_component *component,
-					int enable, bool dapm);
+static int msm_int_enable_dig_cdc_clk(struct snd_soc_codec *codec, int enable,
+				      bool dapm);
 static int msm_int_mclk0_event(struct snd_soc_dapm_widget *w,
 			      struct snd_kcontrol *kcontrol, int event);
 static int msm_int_mi2s_snd_startup(struct snd_pcm_substream *substream);
@@ -425,9 +450,9 @@ static const struct snd_soc_dapm_widget msm_int_dapm_widgets[] = {
 };
 
 static int msm_config_hph_compander_gpio(bool enable,
-					 struct snd_soc_component *component)
+					 struct snd_soc_codec *codec)
 {
-	struct snd_soc_card *card = component->card;
+	struct snd_soc_card *card = codec->component.card;
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	int ret = 0;
 
@@ -477,9 +502,9 @@ static int is_ext_spk_gpio_support(struct platform_device *pdev,
 	return 0;
 }
 
-static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
+static int enable_spk_ext_pa(struct snd_soc_codec *codec, int enable)
 {
-	struct snd_soc_card *card = component->card;
+	struct snd_soc_card *card = codec->component.card;
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	int ret;
 
@@ -644,7 +669,7 @@ static int msm_vi_feed_tx_ch_put(struct snd_kcontrol *kcontrol,
 	return 1;
 }
 
-static int msm_int_enable_dig_cdc_clk(struct snd_soc_component *component,
+static int msm_int_enable_dig_cdc_clk(struct snd_soc_codec *codec,
 				      int enable, bool dapm)
 {
 	int ret = 0;
@@ -652,7 +677,7 @@ static int msm_int_enable_dig_cdc_clk(struct snd_soc_component *component,
 	int clk_freq_in_hz;
 	bool int_mclk0_freq_chg = false;
 
-	pdata = snd_soc_card_get_drvdata(component->card);
+	pdata = snd_soc_card_get_drvdata(codec->component.card);
 	pr_debug("%s: enable %d mclk ref counter %d\n",
 		   __func__, enable,
 		   atomic_read(&pdata->int_mclk0_rsc_ref));
@@ -734,10 +759,9 @@ static int loopback_mclk_put(struct snd_kcontrol *kcontrol,
 {
 	int ret = -EINVAL;
 	struct msm_asoc_mach_data *pdata = NULL;
-	struct snd_soc_component *component =
-				snd_soc_kcontrol_component(kcontrol);
+	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
 
-	pdata = snd_soc_card_get_drvdata(component->card);
+	pdata = snd_soc_card_get_drvdata(codec->component.card);
 	pr_debug("%s: mclk_rsc_ref %d enable %ld\n",
 			__func__, atomic_read(&pdata->int_mclk0_rsc_ref),
 			ucontrol->value.integer.value[0]);
@@ -771,12 +795,12 @@ static int loopback_mclk_put(struct snd_kcontrol *kcontrol,
 		}
 		mutex_unlock(&pdata->cdc_int_mclk0_mutex);
 		atomic_inc(&pdata->int_mclk0_rsc_ref);
-		msm_anlg_cdc_mclk_enable(component, 1, true);
+		msm_anlg_cdc_mclk_enable(codec, 1, true);
 		break;
 	case 0:
 		if (atomic_read(&pdata->int_mclk0_rsc_ref) <= 0)
 			break;
-		msm_anlg_cdc_mclk_enable(component, 0, true);
+		msm_anlg_cdc_mclk_enable(codec, 0, true);
 		mutex_lock(&pdata->cdc_int_mclk0_mutex);
 		if ((!atomic_dec_return(&pdata->int_mclk0_rsc_ref)) &&
 				(atomic_read(&pdata->int_mclk0_enabled))) {
@@ -917,11 +941,10 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 			  struct snd_kcontrol *kcontrol, int event)
 {
 	struct msm_asoc_mach_data *pdata = NULL;
-	struct snd_soc_component *component =
-				snd_soc_dapm_to_component(w->dapm);
+	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
 	int ret = 0;
 
-	pdata = snd_soc_card_get_drvdata(component->card);
+	pdata = snd_soc_card_get_drvdata(codec->component.card);
 	pr_debug("%s: event = %d\n", __func__, event);
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
@@ -951,11 +974,10 @@ static int msm_int_mclk0_event(struct snd_soc_dapm_widget *w,
 			       struct snd_kcontrol *kcontrol, int event)
 {
 	struct msm_asoc_mach_data *pdata = NULL;
-	struct snd_soc_component *component =
-				snd_soc_dapm_to_component(w->dapm);
+	struct snd_soc_codec *codec = snd_soc_dapm_to_codec(w->dapm);
 	int ret = 0;
 
-	pdata = snd_soc_card_get_drvdata(component->card);
+	pdata = snd_soc_card_get_drvdata(codec->component.card);
 	pr_debug("%s: event = %d\n", __func__, event);
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
@@ -965,8 +987,8 @@ static int msm_int_mclk0_event(struct snd_soc_dapm_widget *w,
 			       __func__, "int_pdm");
 			return ret;
 		}
-		msm_int_enable_dig_cdc_clk(component, 1, true);
-		msm_anlg_cdc_mclk_enable(component, 1, true);
+		msm_int_enable_dig_cdc_clk(codec, 1, true);
+		msm_anlg_cdc_mclk_enable(codec, 1, true);
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 		pr_debug("%s: mclk_res_ref = %d\n",
@@ -979,8 +1001,8 @@ static int msm_int_mclk0_event(struct snd_soc_dapm_widget *w,
 		}
 		pr_debug("%s: disabling MCLK\n", __func__);
 		/* disable the codec mclk config*/
-		msm_anlg_cdc_mclk_enable(component, 0, true);
-		msm_int_enable_dig_cdc_clk(component, 0, true);
+		msm_anlg_cdc_mclk_enable(codec, 0, true);
+		msm_int_enable_dig_cdc_clk(codec, 0, true);
 		break;
 	default:
 		pr_err("%s: invalid DAPM event %d\n", __func__, event);
@@ -1151,17 +1173,11 @@ static int msm_int_mi2s_snd_startup(struct snd_pcm_substream *substream)
 {
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
-	struct snd_soc_component *component =
-				snd_soc_rtdcom_lookup(rtd, "pmic_analog_codec");
+	struct snd_soc_codec *codec = rtd->codec_dais[ANA_CDC]->codec;
 	int ret = 0;
 	struct msm_asoc_mach_data *pdata = NULL;
 
-	if (!component) {
-		pr_err("%s: component is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	pdata = snd_soc_card_get_drvdata(component->card);
+	pdata = snd_soc_card_get_drvdata(codec->component.card);
 	pr_debug("%s(): substream = %s  stream = %d\n", __func__,
 		 substream->name, substream->stream);
 
@@ -1202,8 +1218,13 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	if (!msm_int_wcd_cal)
 		return NULL;
 
+#if defined(CONFIG_ARCH_SONY_NILE) || defined (CONFIG_ARCH_SONY_GANGES)
+#define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(msm_int_wcd_cal)->X) = (Y))
+	S(v_hs_max, 1600);
+#else
 #define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(msm_int_wcd_cal)->X) = (Y))
 	S(v_hs_max, 1500);
+#endif /* !CONFIG_ARCH_SONY_NILE */
 #undef S
 #define S(X, Y) ((WCD_MBHC_CAL_BTN_DET_PTR(msm_int_wcd_cal)->X) = (Y))
 	S(num_btn, WCD_MBHC_DEF_BUTTONS);
@@ -1237,16 +1258,19 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	btn_low[4] = 500;
 	btn_high[4] = 500;
 
+#if defined(CONFIG_ARCH_SONY_NILE) || defined (CONFIG_ARCH_SONY_GANGES)
+	btn_low[1] = 110;
+	btn_high[1] = 110;
+#endif
+
 	return msm_int_wcd_cal;
 }
 
 static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 {
-	struct snd_soc_component *dig_cdc =
-			snd_soc_rtdcom_lookup(rtd, "msm_digital_codec");
-	struct snd_soc_component *ana_cdc =
-			snd_soc_rtdcom_lookup(rtd, "pmic_analog_codec");
-	struct snd_soc_dapm_context *dapm;
+	struct snd_soc_codec *dig_cdc = rtd->codec_dais[DIG_CDC]->codec;
+	struct snd_soc_codec *ana_cdc = rtd->codec_dais[ANA_CDC]->codec;
+	struct snd_soc_dapm_context *dapm = snd_soc_codec_get_dapm(ana_cdc);
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(rtd->card);
 	struct snd_card *card;
@@ -1254,20 +1278,14 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 
 	pr_debug("%s(),dev_name%s\n", __func__, dev_name(cpu_dai->dev));
 
-	if (!dig_cdc || !ana_cdc) {
-		pr_err("%s: component is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	dapm = snd_soc_component_get_dapm(ana_cdc);
-	ret = snd_soc_add_component_controls(ana_cdc, msm_snd_controls,
+	ret = snd_soc_add_codec_controls(ana_cdc, msm_snd_controls,
 				   ARRAY_SIZE(msm_snd_controls));
 	if (ret < 0) {
 		pr_err("%s: add_codec_controls failed: %d\n",
 			__func__, ret);
 		return ret;
 	}
-	ret = snd_soc_add_component_controls(ana_cdc, msm_common_snd_controls,
+	ret = snd_soc_add_codec_controls(ana_cdc, msm_common_snd_controls,
 				   msm_common_snd_controls_size());
 	if (ret < 0) {
 		pr_err("%s: add common snd controls failed: %d\n",
@@ -1292,7 +1310,7 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_ignore_suspend(dapm, "AMIC3");
 	snd_soc_dapm_sync(dapm);
 
-	dapm = snd_soc_component_get_dapm(dig_cdc);
+	dapm = snd_soc_codec_get_dapm(dig_cdc);
 	snd_soc_dapm_ignore_suspend(dapm, "DMIC1");
 	snd_soc_dapm_ignore_suspend(dapm, "DMIC2");
 	snd_soc_dapm_ignore_suspend(dapm, "DMIC3");
@@ -1322,20 +1340,14 @@ done:
 
 static int msm_sdw_audrx_init(struct snd_soc_pcm_runtime *rtd)
 {
-	struct snd_soc_dapm_context *dapm;
+	struct snd_soc_codec *codec = rtd->codec;
+	struct snd_soc_dapm_context *dapm =
+			snd_soc_codec_get_dapm(codec);
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(rtd->card);
 	struct snd_soc_component *aux_comp;
 	struct snd_card *card;
-	struct snd_soc_component *component =
-				snd_soc_rtdcom_lookup(rtd, "msm_sdw_codec");
 
-	if (!component) {
-		pr_err("%s: component is NULL\n", __func__);
-		return -EINVAL;
-	}
-	dapm = snd_soc_component_get_dapm(component);
-
-	snd_soc_add_component_controls(component, msm_sdw_controls,
+	snd_soc_add_codec_controls(codec, msm_sdw_controls,
 			ARRAY_SIZE(msm_sdw_controls));
 
 	snd_soc_dapm_ignore_suspend(dapm, "AIF1_SDW Playback");
@@ -1356,11 +1368,11 @@ static int msm_sdw_audrx_init(struct snd_soc_pcm_runtime *rtd)
 	if (rtd->card->num_aux_devs &&
 		!list_empty(&rtd->card->aux_comp_list)) {
 		aux_comp = list_first_entry(&rtd->card->aux_comp_list,
-			struct snd_soc_component, card_aux_list);
+					struct snd_soc_component, card_aux_list);
 		if (!strcmp(aux_comp->name, WSA8810_NAME_1) ||
 			!strcmp(aux_comp->name, WSA8810_NAME_2)) {
-			msm_sdw_set_spkr_mode(component, SPKR_MODE_1);
-			msm_sdw_set_spkr_gain_offset(component,
+			msm_sdw_set_spkr_mode(rtd->codec, SPKR_MODE_1);
+			msm_sdw_set_spkr_gain_offset(rtd->codec,
 						   RX_GAIN_OFFSET_M1P5_DB);
 		}
 	}
@@ -1374,7 +1386,7 @@ static int msm_sdw_audrx_init(struct snd_soc_pcm_runtime *rtd)
 		goto done;
 	}
 	pdata->codec_root = codec_root;
-	msm_sdw_codec_info_create_codec_entry(codec_root, component);
+	msm_sdw_codec_info_create_codec_entry(codec_root, codec);
 done:
 	return 0;
 }
@@ -1383,9 +1395,9 @@ static int msm_wcn_init(struct snd_soc_pcm_runtime *rtd)
 {
 	unsigned int rx_ch[WCN_CDC_SLIM_RX_CH_MAX] = {157, 158};
 	unsigned int tx_ch[WCN_CDC_SLIM_TX_CH_MAX]  = {159, 160, 161};
-	struct snd_soc_dai *component_dai = rtd->codec_dai;
+	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 
-	return snd_soc_dai_set_channel_map(component_dai, ARRAY_SIZE(tx_ch),
+	return snd_soc_dai_set_channel_map(codec_dai, ARRAY_SIZE(tx_ch),
 					   tx_ch, ARRAY_SIZE(rx_ch), rx_ch);
 }
 
@@ -1424,10 +1436,163 @@ exit:
 	return ret;
 }
 
+static unsigned int tdm_param_set_slot_mask(u16 port_id, int slot_width,
+					    int slots)
+{
+	unsigned int slot_mask = 0;
+	int i, j;
+	unsigned int *slot_offset;
+
+	for (i = TDM_0; i < TDM_PORT_MAX; i++) {
+		slot_offset = tdm_slot_offset[i];
+
+		for (j = 0; j < TDM_SLOT_OFFSET_MAX; j++) {
+			if (slot_offset[j] != AFE_SLOT_MAPPING_OFFSET_INVALID)
+				slot_mask |=
+				(1 << ((slot_offset[j] * 8) / slot_width));
+			else
+				break;
+		}
+	}
+
+	return slot_mask;
+}
+
+static int msm_tdm_snd_hw_params(struct snd_pcm_substream *substream,
+				     struct snd_pcm_hw_params *params)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
+	int ret = 0;
+	int channels, slot_width, slots;
+	unsigned int slot_mask;
+	unsigned int *slot_offset;
+	int offset_channels = 0;
+	int i;
+
+	pr_debug("%s: dai id = 0x%x\n", __func__, cpu_dai->id);
+
+	channels = params_channels(params);
+	switch (channels) {
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+		switch (params_format(params)) {
+		case SNDRV_PCM_FORMAT_S32_LE:
+		case SNDRV_PCM_FORMAT_S24_LE:
+		case SNDRV_PCM_FORMAT_S16_LE:
+		/*
+		 * up to 8 channels HW config should
+		 * use 32 bit slot width for max support of
+		 * stream bit width. (slot_width > bit_width)
+		 */
+			slot_width = 32;
+			break;
+		default:
+			pr_err("%s: invalid param format 0x%x\n",
+				__func__, params_format(params));
+			return -EINVAL;
+		}
+		slots = 8;
+		slot_mask = tdm_param_set_slot_mask(cpu_dai->id,
+						    slot_width,
+						    slots);
+		if (!slot_mask) {
+			pr_err("%s: invalid slot_mask 0x%x\n",
+				__func__, slot_mask);
+			return -EINVAL;
+		}
+		break;
+	default:
+		pr_err("%s: invalid param channels %d\n",
+			__func__, channels);
+		return -EINVAL;
+	}
+	/* currently only supporting TDM_RX_0 and TDM_TX_0 */
+	switch (cpu_dai->id) {
+	case AFE_PORT_ID_PRIMARY_TDM_RX:
+	case AFE_PORT_ID_SECONDARY_TDM_RX:
+	case AFE_PORT_ID_TERTIARY_TDM_RX:
+	case AFE_PORT_ID_QUATERNARY_TDM_RX:
+	case AFE_PORT_ID_QUINARY_TDM_RX:
+	case AFE_PORT_ID_PRIMARY_TDM_TX:
+	case AFE_PORT_ID_SECONDARY_TDM_TX:
+	case AFE_PORT_ID_TERTIARY_TDM_TX:
+	case AFE_PORT_ID_QUATERNARY_TDM_TX:
+	case AFE_PORT_ID_QUINARY_TDM_TX:
+		slot_offset = tdm_slot_offset[TDM_0];
+		break;
+	default:
+		pr_err("%s: dai id 0x%x not supported\n",
+			__func__, cpu_dai->id);
+		return -EINVAL;
+	}
+
+	for (i = 0; i < TDM_SLOT_OFFSET_MAX; i++) {
+		if (slot_offset[i] != AFE_SLOT_MAPPING_OFFSET_INVALID)
+			offset_channels++;
+		else
+			break;
+	}
+
+	if (offset_channels == 0) {
+		pr_err("%s: slot offset not supported, offset_channels %d\n",
+			__func__, offset_channels);
+		return -EINVAL;
+	}
+
+	if (channels > offset_channels) {
+		pr_err("%s: channels %d exceed offset_channels %d\n",
+			__func__, channels, offset_channels);
+		return -EINVAL;
+	}
+
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+		ret = snd_soc_dai_set_tdm_slot(cpu_dai, 0, slot_mask,
+					       slots, slot_width);
+		if (ret < 0) {
+			pr_err("%s: failed to set tdm slot, err:%d\n",
+				__func__, ret);
+			goto end;
+		}
+
+		ret = snd_soc_dai_set_channel_map(cpu_dai, 0, NULL,
+						  channels, slot_offset);
+		if (ret < 0) {
+			pr_err("%s: failed to set channel map, err:%d\n",
+				__func__, ret);
+			goto end;
+		}
+	} else {
+		ret = snd_soc_dai_set_tdm_slot(cpu_dai, slot_mask, 0,
+					       slots, slot_width);
+		if (ret < 0) {
+			pr_err("%s: failed to set tdm slot, err:%d\n",
+				__func__, ret);
+			goto end;
+		}
+
+		ret = snd_soc_dai_set_channel_map(cpu_dai, channels,
+						  slot_offset, 0, NULL);
+		if (ret < 0) {
+			pr_err("%s: failed to set channel map, err:%d\n",
+				__func__, ret);
+			goto end;
+		}
+	}
+end:
+	return ret;
+}
+
 static int msm_snd_card_late_probe(struct snd_soc_card *card)
 {
 	const char *be_dl_name = LPASS_BE_INT0_MI2S_RX;
-	struct snd_soc_component *ana_cdc;
+	struct snd_soc_codec *ana_cdc;
 	struct snd_soc_pcm_runtime *rtd;
 	int ret = 0;
 
@@ -1438,13 +1603,8 @@ static int msm_snd_card_late_probe(struct snd_soc_card *card)
 			__func__, be_dl_name);
 		return -EINVAL;
 	}
-	ana_cdc = snd_soc_rtdcom_lookup(rtd, "pmic_analog_codec");
-	if (!ana_cdc) {
-		dev_err(card->dev,
-			"%s: component is NULL\n", __func__);
-		return -EINVAL;
-	}
 
+	ana_cdc = rtd->codec_dais[ANA_CDC]->codec;
 	mbhc_cfg_ptr->calibration = def_msm_int_wcd_mbhc_cal();
 	if (!mbhc_cfg_ptr->calibration)
 		return -ENOMEM;
@@ -1460,9 +1620,7 @@ static int msm_snd_card_late_probe(struct snd_soc_card *card)
 }
 
 static struct snd_soc_ops msm_tdm_be_ops = {
-	.startup = msm_tdm_snd_startup,
-	.shutdown = msm_tdm_snd_shutdown,
-	.hw_params = msm_tdm_snd_hw_params,
+	.hw_params = msm_tdm_snd_hw_params
 };
 
 static struct snd_soc_ops msm_wcn_ops = {
@@ -2422,33 +2580,6 @@ static struct snd_soc_dai_link msm_int_be_dai[] = {
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
 	},
-	/* Proxy Tx BACK END DAI Link */
-	{
-		.name = LPASS_BE_PROXY_TX,
-		.stream_name = "Proxy Capture",
-		.cpu_dai_name = "msm-dai-q6-dev.8195",
-		.platform_name = "msm-pcm-routing",
-		.codec_name = "msm-stub-codec.1",
-		.codec_dai_name = "msm-stub-tx",
-		.no_pcm = 1,
-		.dpcm_capture = 1,
-		.id = MSM_BACKEND_DAI_PROXY_TX,
-		.ignore_suspend = 1,
-	},
-	/* Proxy Rx BACK END DAI Link */
-	{
-		.name = LPASS_BE_PROXY_RX,
-		.stream_name = "Proxy Playback",
-		.cpu_dai_name = "msm-dai-q6-dev.8194",
-		.platform_name = "msm-pcm-routing",
-		.codec_name = "msm-stub-codec.1",
-		.codec_dai_name = "msm-stub-rx",
-		.no_pcm = 1,
-		.dpcm_playback = 1,
-		.id = MSM_BACKEND_DAI_PROXY_RX,
-		.ignore_pmdown_time = 1,
-		.ignore_suspend = 1,
-	},
 	{
 		.name = LPASS_BE_USB_AUDIO_RX,
 		.stream_name = "USB Audio Playback",
@@ -3000,7 +3131,7 @@ static struct snd_soc_dai_link ext_disp_be_dai_link[] = {
 	{
 		.name = LPASS_BE_DISPLAY_PORT,
 		.stream_name = "Display Port Playback",
-		.cpu_dai_name = "msm-dai-q6-dp.0",
+		.cpu_dai_name = "msm-dai-q6-dp.24608",
 		.platform_name = "msm-pcm-routing",
 		.codec_name = "msm-ext-disp-audio-codec-rx",
 		.codec_dai_name = "msm_dp_audio_codec_rx_dai",

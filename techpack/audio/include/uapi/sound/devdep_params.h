@@ -1,6 +1,12 @@
 #ifndef _DEV_DEP_H
 #define _DEV_DEP_H
 
+#ifndef __KERNEL__
+ #ifndef __user
+  #define __user
+ #endif
+#endif
+
 struct dolby_param_data {
 	int32_t version;
 	int32_t device_id;
@@ -61,14 +67,6 @@ struct snd_pcm_mmap_fd {
 	int32_t actual_size;
 };
 
-struct snd_pcm_prsnt_position {
-	uint64_t timestamp;
-	uint64_t frames;
-	int32_t clock_id;
-};
-
 #define SNDRV_PCM_IOCTL_MMAP_DATA_FD    _IOWR('U', 0xd2, struct snd_pcm_mmap_fd)
-#define SNDRV_PCM_IOCTL_DSP_POSITION\
-			_IOWR('U', 0xd3, struct snd_pcm_prsnt_position)
 
 #endif
