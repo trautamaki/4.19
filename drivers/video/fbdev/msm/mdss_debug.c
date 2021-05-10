@@ -1,5 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2009-2020, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2009-2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
 
@@ -85,7 +95,6 @@ static int panel_debug_base_open(struct inode *inode, struct file *file)
 static int panel_debug_base_release(struct inode *inode, struct file *file)
 {
 	struct mdss_debug_base *dbg = file->private_data;
-
 	mutex_lock(&mdss_debug_lock);
 	if (dbg && dbg->buf) {
 		kfree(dbg->buf);
@@ -148,7 +157,7 @@ static ssize_t panel_debug_base_offset_read(struct file *file,
 		return 0;	/* the end */
 
 	mutex_lock(&mdss_debug_lock);
-	len = scnprintf(buf, sizeof(buf), "0x%02zx %zx\n", dbg->off, dbg->cnt);
+	len = snprintf(buf, sizeof(buf), "0x%02zx %zx\n", dbg->off, dbg->cnt);
 	if (len < 0 || len >= sizeof(buf)) {
 		mutex_unlock(&mdss_debug_lock);
 		return 0;
@@ -359,7 +368,7 @@ int panel_debug_register_base(const char *name, void __iomem *base,
 	dbg->cmd_data_type = DTYPE_DCS_LWRITE;
 
 	if (name)
-		prefix_len = scnprintf(dn, sizeof(dn), "%s_", name);
+		prefix_len = snprintf(dn, sizeof(dn), "%s_", name);
 
 	strlcpy(dn + prefix_len, "cmd_data_type", sizeof(dn) - prefix_len);
 	ent_type = debugfs_create_x8(dn, 0644, mdd->root,
@@ -414,7 +423,6 @@ static int mdss_debug_base_open(struct inode *inode, struct file *file)
 static int mdss_debug_base_release(struct inode *inode, struct file *file)
 {
 	struct mdss_debug_base *dbg = file->private_data;
-
 	mutex_lock(&mdss_debug_lock);
 	if (dbg && dbg->buf) {
 		kfree(dbg->buf);
@@ -516,7 +524,7 @@ static ssize_t mdss_debug_base_offset_read(struct file *file,
 		return 0;	/* the end */
 
 	mutex_lock(&mdss_debug_lock);
-	len = scnprintf(buf, sizeof(buf), "0x%08zx %zx\n", dbg->off, dbg->cnt);
+	len = snprintf(buf, sizeof(buf), "0x%08zx %zx\n", dbg->off, dbg->cnt);
 	if (len < 0 || len >= sizeof(buf)) {
 		mutex_unlock(&mdss_debug_lock);
 		return 0;
@@ -601,6 +609,7 @@ static ssize_t mdss_debug_base_reg_read(struct file *file,
 		dbg->buf = kzalloc(dbg->buf_len, GFP_KERNEL);
 
 		if (!dbg->buf) {
+			pr_err("not enough memory to hold reg dump\n");
 			mutex_unlock(&mdss_debug_lock);
 			return -ENOMEM;
 		}
@@ -698,7 +707,7 @@ int mdss_debug_register_base(const char *name, void __iomem *base,
 	dbg->reg_dump = NULL;
 
 	if (name && strcmp(name, "mdp"))
-		prefix_len = scnprintf(dn, sizeof(dn), "%s_", name);
+		prefix_len = snprintf(dn, sizeof(dn), "%s_", name);
 
 	strlcpy(dn + prefix_len, "off", sizeof(dn) - prefix_len);
 	ent_off = debugfs_create_file(dn, 0644, mdd->root, dbg, &mdss_off_fops);
@@ -889,7 +898,7 @@ static ssize_t mdss_debug_factor_read(struct file *file,
 	if (*ppos)
 		return 0;	/* the end */
 
-	len = scnprintf(buf, sizeof(buf), "%d/%d\n",
+	len = snprintf(buf, sizeof(buf), "%d/%d\n",
 			factor->numer, factor->denom);
 	if (len < 0 || len >= sizeof(buf))
 		return 0;
@@ -927,7 +936,7 @@ static ssize_t mdss_debug_perf_mode_write(struct file *file,
 
 	buf[count] = 0;	/* end of string */
 
-	if (kstrtoint(buf, 10, &perf_mode) != 1)
+	if (sscanf(buf, "%d", &perf_mode) != 1)
 		return -EFAULT;
 
 	if (perf_mode) {
@@ -955,7 +964,7 @@ static ssize_t mdss_debug_perf_mode_read(struct file *file,
 	if (*ppos)
 		return 0;	/* the end */
 
-	len = scnprintf(buf, sizeof(buf), "min_mdp_clk %lu min_bus_vote %llu\n",
+	len = snprintf(buf, sizeof(buf), "min_mdp_clk %lu min_bus_vote %llu\n",
 	perf_tune->min_mdp_clk, perf_tune->min_bus_vote);
 	if (len < 0 || len >= sizeof(buf))
 		return 0;
@@ -988,7 +997,7 @@ static ssize_t mdss_debug_perf_panic_read(struct file *file,
 	if (*ppos)
 		return 0; /* the end */
 
-	len = scnprintf(buf, sizeof(buf), "%d\n",
+	len = snprintf(buf, sizeof(buf), "%d\n",
 		!mdata->has_panic_ctrl);
 	if (len < 0 || len >= sizeof(buf))
 		return 0;
@@ -1012,7 +1021,7 @@ static int mdss_debug_set_panic_signal(struct mdss_mdp_pipe *pipe_pool,
 		if (pipe && (refcount_read(&pipe->kref.refcount) != 0) &&
 			mdss_mdp_panic_signal_support_mode(mdata)) {
 			mdss_mdp_pipe_panic_signal_ctrl(pipe, enable);
-			pr_debug("pnum:%d count:%d img:%dx%d\n",
+			pr_debug("pnum:%d count:%d img:%dx%d ",
 				pipe->num, pipe->play_cnt, pipe->img_width,
 				pipe->img_height);
 			pr_debug("src[%d,%d,%d,%d] dst[%d,%d,%d,%d]\n",
@@ -1064,7 +1073,7 @@ static ssize_t mdss_debug_perf_panic_write(struct file *file,
 
 	buf[count] = 0;	/* end of string */
 
-	if (kstrtoint(buf, 10, &disable_panic) != 1)
+	if (sscanf(buf, "%d", &disable_panic) != 1)
 		return -EFAULT;
 
 	if (disable_panic) {
@@ -1100,7 +1109,8 @@ static int mdss_debugfs_cleanup(struct mdss_debug_data *mdd)
 		kfree(base);
 	}
 
-	debugfs_remove_recursive(mdd->root);
+	if (mdd->root)
+		debugfs_remove_recursive(mdd->root);
 
 	kfree(mdd);
 
@@ -1126,7 +1136,7 @@ static ssize_t mdss_debug_perf_bw_limit_read(struct file *file,
 
 	temp_settings = mdata->max_bw_settings;
 	for (i = 0; i < mdata->max_bw_settings_cnt; i++) {
-		len += scnprintf(buf + len, sizeof(buf), "%d %d\n",
+		len += snprintf(buf + len, sizeof(buf), "%d %d\n",
 				temp_settings->mdss_max_bw_mode,
 					temp_settings->mdss_max_bw_val);
 		temp_settings++;
@@ -1176,9 +1186,10 @@ static ssize_t mdss_debug_perf_bw_limit_write(struct file *file,
 		if (mode == temp_settings->mdss_max_bw_mode) {
 			temp_settings->mdss_max_bw_val = val;
 			break;
+		} else {
+			temp_settings++;
 		}
-		temp_settings++;
-		}
+	}
 
 	if (cnt == 0)
 		pr_err("Input mode is invalid\n");
@@ -1193,8 +1204,8 @@ static const struct file_operations mdss_perf_bw_limit_fops = {
 };
 
 static int mdss_debugfs_perf_init(struct mdss_debug_data *mdd,
-			struct mdss_data_type *mdata)
-{
+			struct mdss_data_type *mdata) {
+
 	debugfs_create_u32("min_mdp_clk", 0644, mdd->perf,
 		(u32 *)&mdata->perf_tune.min_mdp_clk);
 
@@ -1261,9 +1272,10 @@ int mdss_debugfs_init(struct mdss_data_type *mdata)
 	}
 
 	mdd = kzalloc(sizeof(*mdd), GFP_KERNEL);
-	if (!mdd)
+	if (!mdd) {
+		pr_err("no memory to create mdss debug data\n");
 		return -ENOMEM;
-
+	}
 	INIT_LIST_HEAD(&mdd->base_list);
 
 	mdd->root = debugfs_create_dir("mdp", NULL);
@@ -1581,7 +1593,7 @@ int mdss_misr_set(struct mdss_data_type *mdata,
 	bool use_mdp_up_misr = false;
 
 	if (!mdata || !req || !ctl) {
-		pr_err("Invalid input params: mdata = %pK req = %pK ctl = %pK\n",
+		pr_err("Invalid input params: mdata = %pK req = %pK ctl = %pK",
 			mdata, req, ctl);
 		return -EINVAL;
 	}
@@ -1657,7 +1669,7 @@ int mdss_misr_set(struct mdss_data_type *mdata,
 	map->is_ping_full = false;
 	map->is_pong_full = false;
 
-	if (map->crc_op_mode != MISR_OP_BM) {
+	if (MISR_OP_BM != map->crc_op_mode) {
 
 		writel_relaxed(config,
 				mdata->mdp_base + map->ctrl_reg);
@@ -1764,7 +1776,7 @@ int mdss_misr_get(struct mdss_data_type *mdata,
 		resp->crc_op_mode = map->crc_op_mode;
 		break;
 	default:
-		ret = -ENOTSUPP;
+		ret = -ENOSYS;
 		break;
 	}
 
@@ -1814,7 +1826,7 @@ void mdss_misr_crc_collect(struct mdss_data_type *mdata, int block_id,
 			map->crc_index = (map->crc_index + 1);
 			if (map->crc_index == MISR_CRC_BATCH_SIZE) {
 				map->crc_index = 0;
-				if (map->use_ping) {
+				if (true == map->use_ping) {
 					map->is_ping_full = true;
 					map->use_ping = false;
 				} else {
@@ -1839,7 +1851,7 @@ void mdss_misr_crc_collect(struct mdss_data_type *mdata, int block_id,
 				mdata->mdp_base + map->ctrl_reg);
 		}
 
-	} else if (status == 0) {
+	} else if (0 == status) {
 
 		if (mdata->mdp_rev < MDSS_MDP_HW_REV_105)
 			writel_relaxed(MISR_CRC_BATCH_CFG,
@@ -1856,7 +1868,7 @@ void mdss_misr_crc_collect(struct mdss_data_type *mdata, int block_id,
 		vsync_count, crc, map->crc_index);
 	trace_mdp_misr_crc(block_id, vsync_count, crc);
 
-	if (vsync_count == MAX_VSYNC_COUNT) {
+	if (MAX_VSYNC_COUNT == vsync_count) {
 		pr_debug("RESET vsync_count(%d)\n", vsync_count);
 		vsync_count = 0;
 	} else {

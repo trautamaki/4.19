@@ -1,5 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2013-2018, 2020-2021, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2013-2018, 2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #include <linux/kernel.h>
 #include <linux/pm_runtime.h>
@@ -458,23 +468,23 @@ static inline void __enable_rd_ptr_from_te(char __iomem *pingpong_base)
 }
 
 /*
- * __disable_autorefresh - disables autorefresh feature in the hw.
- *
- * To disable autorefresh, driver needs to make sure no transactions are
- * on-going; for ensuring this, driver must:
- *
- * 1. Disable listening to the external TE (this gives extra time before
- *     trigger next transaction).
- * 2. Wait for any on-going transaction (wait for ping pong done interrupt).
- * 3. Disable auto-refresh.
- * 4. Re-enable listening to the external panel TE.
- *
- * So it is responsability of the caller of this function to only call to
- * disable autorefresh if no hw transaction is on-going (wait for ping pong)
- * and if the listening for the external TE is disabled in the tear check logic
- * (this to prevent any race conditions with the hw), as mentioned in the above
- * steps.
- */
+* __disable_autorefresh - disables autorefresh feature in the hw.
+*
+* To disable autorefresh, driver needs to make sure no transactions are
+* on-going; for ensuring this, driver must:
+*
+* 1. Disable listening to the external TE (this gives extra time before
+*     trigger next transaction).
+* 2. Wait for any on-going transaction (wait for ping pong done interrupt).
+* 3. Disable auto-refresh.
+* 4. Re-enable listening to the external panel TE.
+*
+* So it is responsability of the caller of this function to only call to disable
+* autorefresh if no hw transaction is on-going (wait for ping pong) and if
+* the listening for the external TE is disabled in the tear check logic (this
+* to prevent any race conditions with the hw), as mentioned in the above
+* steps.
+*/
 static inline void __disable_autorefresh(char __iomem *pingpong_base)
 {
 	mdss_mdp_pingpong_write(pingpong_base,
@@ -686,7 +696,7 @@ int mdss_mdp_get_split_display_ctls(struct mdss_mdp_ctl **ctl,
 				 */
 				pr_err("%s cannot find master ctl\n",
 					__func__);
-				WARN_ON(!(*sctl));
+				BUG();
 			}
 			/*
 			 * We have both controllers but sctl has the Master,
@@ -849,7 +859,7 @@ int mdss_mdp_resource_control(struct mdss_mdp_ctl *ctl, u32 sw_event)
 			/* we must be ON by the end of kickoff */
 			pr_err("%s unexpected power state during:%s\n",
 				__func__, get_sw_event_name(sw_event));
-			WARN_ON(1);
+			BUG();
 		}
 		mutex_unlock(&ctl->rsrc_lock);
 		break;
@@ -857,7 +867,7 @@ int mdss_mdp_resource_control(struct mdss_mdp_ctl *ctl, u32 sw_event)
 		if (mdp5_data->resources_state != MDP_RSRC_CTL_STATE_ON) {
 			pr_err("%s unexpected power state during:%s\n",
 				__func__, get_sw_event_name(sw_event));
-			WARN_ON(1);
+			BUG();
 		}
 
 		/* Check that no pending kickoff is on-going */
@@ -878,7 +888,7 @@ int mdss_mdp_resource_control(struct mdss_mdp_ctl *ctl, u32 sw_event)
 		 * 3. no autorefresh is enabled
 		 * 4. no commit is pending
 		 */
-		if ((status == PERF_STATUS_DONE) &&
+		if ((PERF_STATUS_DONE == status) &&
 			!ctx->intf_stopped &&
 			(ctx->autorefresh_state == MDP_AUTOREFRESH_OFF) &&
 			!ctl->mfd->atomic_commit_pending) {
@@ -1081,7 +1091,7 @@ static bool mdss_mdp_cmd_is_autorefresh_enabled(struct mdss_mdp_ctl *mctl)
 
 	/* check the ctl to make sure the lock was initialized */
 	if (!ctx || !ctx->ctl)
-		return false;
+		return 0;
 
 	mutex_lock(&ctx->autorefresh_lock);
 	if (ctx->autorefresh_state == MDP_AUTOREFRESH_ON)
@@ -2017,6 +2027,7 @@ int mdss_mdp_cmd_reconfigure_splash_done(struct mdss_mdp_ctl *ctl,
 	struct mdss_mdp_ctl *sctl = NULL;
 	struct mdss_mdp_cmd_ctx *sctx = NULL;
 	struct dsi_panel_clk_ctrl clk_ctrl;
+	int ret = 0;
 
 	/* Get both controllers in the correct order for dual displays */
 	mdss_mdp_get_split_display_ctls(&ctl, &sctl);
@@ -2052,7 +2063,7 @@ int mdss_mdp_cmd_reconfigure_splash_done(struct mdss_mdp_ctl *ctl,
 	else if (pdata->next && is_pingpong_split(ctl->mfd))
 		pdata->next->panel_info.cont_splash_enabled = 0;
 
-	return 0;
+	return ret;
 }
 
 static int __mdss_mdp_wait4pingpong(struct mdss_mdp_cmd_ctx *ctx)
@@ -2116,7 +2127,6 @@ static int mdss_mdp_cmd_wait4pingpong(struct mdss_mdp_ctl *ctl, void *arg)
 
 	if (rc <= 0) {
 		u32 status, mask;
-
 		mask = mdss_mdp_get_irq_mask(MDSS_MDP_IRQ_TYPE_PING_PONG_COMP,
 				ctx->current_pp_num);
 		status = mask & readl_relaxed(ctl->mdata->mdp_base +
@@ -2244,9 +2254,9 @@ static void mdss_mdp_cmd_dsc_reconfig(struct mdss_mdp_ctl *ctl)
 	pinfo = &ctl->panel_data->panel_info;
 	if (pinfo->compression_mode != COMPRESSION_DSC) {
 		/*
-		 * Check for a dynamic resolution switch from DSC On to
-		 * DSC Off and call mdss_mdp_ctl_dsc_setup to disable DSC
-		 */
+		* Check for a dynamic resolution switch from DSC On to
+		* DSC Off and call mdss_mdp_ctl_dsc_setup to disable DSC
+		*/
 		if (ctl->pending_mode_switch == SWITCH_RESOLUTION) {
 			if (ctl->mixer_left && ctl->mixer_left->dsc_enabled)
 				changed = true;
@@ -3147,7 +3157,7 @@ static int mdss_mdp_cmd_kickoff(struct mdss_mdp_ctl *ctl, void *arg)
 	if (ctx->autorefresh_state == MDP_AUTOREFRESH_ON)
 		mdss_mdp_cmd_wait4_autorefresh_done(ctl);
 
-	mb(); /* make sure everything is written before enable */
+	mb();
 	mutex_unlock(&ctx->autorefresh_lock);
 
 	MDSS_XLOG(ctl->num, ctx->current_pp_num,
@@ -3465,12 +3475,12 @@ panel_events:
 	    (is_panel_split(ctl->mfd) && sctl)) && send_panel_events) {
 		pr_debug("%s: send panel events\n", __func__);
 		ret = mdss_mdp_ctl_intf_event(ctl, MDSS_EVENT_BLANK,
-				(void *) (long) panel_power_state,
+				(void *) (long int) panel_power_state,
 				CTL_INTF_EVENT_FLAG_DEFAULT);
 		WARN(ret, "intf %d unblank error (%d)\n", ctl->intf_num, ret);
 
 		ret = mdss_mdp_ctl_intf_event(ctl, MDSS_EVENT_PANEL_OFF,
-				(void *) (long) panel_power_state,
+				(void *) (long int) panel_power_state,
 				CTL_INTF_EVENT_FLAG_DEFAULT);
 		WARN(ret, "intf %d unblank error (%d)\n", ctl->intf_num, ret);
 	}
@@ -3668,7 +3678,7 @@ static int mdss_mdp_cmd_intfs_setup(struct mdss_mdp_ctl *ctl,
 			 * panel always on state without MDSS every
 			 * power-collapsed (such as a case with any other
 			 * interfaces connected). In such cases, we need to
-			 * explicitly call the restore function to enable
+			 * explictly call the restore function to enable
 			 * tearcheck logic.
 			 */
 			mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_ON);
@@ -3677,9 +3687,10 @@ static int mdss_mdp_cmd_intfs_setup(struct mdss_mdp_ctl *ctl,
 
 			/* Turn on panel so that it can exit low power mode */
 			return mdss_mdp_cmd_panel_on(ctl, sctl);
+		} else {
+			pr_err("Intf %d already in use\n", session);
+			return -EBUSY;
 		}
-		pr_err("Intf %d already in use\n", session);
-		return -EBUSY;
 	}
 	ctx->ref_cnt++;
 	ctl->intf_ctx[MASTER_CTX] = ctx;
@@ -3752,9 +3763,10 @@ static int mdss_mdp_cmd_intfs_setup(struct mdss_mdp_ctl *ctl,
 				mdss_mdp_cmd_restore(ctl, false);
 				mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_OFF);
 				return mdss_mdp_cmd_panel_on(ctl, sctl);
+			} else {
+				pr_err("Intf %d already in use\n", session);
+				return -EBUSY;
 			}
-			pr_err("Intf %d already in use\n", session);
-			return -EBUSY;
 		}
 		ctx->ref_cnt++;
 
@@ -3762,7 +3774,7 @@ static int mdss_mdp_cmd_intfs_setup(struct mdss_mdp_ctl *ctl,
 
 		ret = mdss_mdp_cmd_ctx_setup(ctl, ctx, session, session, true);
 		if (ret) {
-			pr_err("mdss_mdp_cmd_ctx_setup failed for slave ping pong block\n");
+			pr_err("mdss_mdp_cmd_ctx_setup failed for slave ping pong block");
 			ctx->ref_cnt--;
 			return -EPERM;
 		}
@@ -3794,7 +3806,7 @@ void mdss_mdp_switch_to_vid_mode(struct mdss_mdp_ctl *ctl, int prep)
 {
 	struct mdss_mdp_ctl *sctl = mdss_mdp_get_split_ctl(ctl);
 	struct dsi_panel_clk_ctrl clk_ctrl;
-	long mode = MIPI_VIDEO_PANEL;
+	long int mode = MIPI_VIDEO_PANEL;
 
 	pr_debug("%s start, prep = %d\n", __func__, prep);
 

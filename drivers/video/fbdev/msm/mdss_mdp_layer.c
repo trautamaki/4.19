@@ -1,5 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved. */
+/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
 
@@ -271,7 +281,6 @@ static int mdss_mdp_destination_scaler_pre_validate(struct mdss_mdp_ctl *ctl,
 	struct mdss_data_type *mdata;
 	struct mdss_panel_info *pinfo;
 	u16 mxleft_w = 0, mxleft_h = 0, mxright_w = 0, mxright_h = 0;
-
 	mdata = ctl->mdata;
 
 	/*
@@ -855,7 +864,7 @@ static int __layer_param_check(struct msm_fb_data_type *mfd,
 
 	if (layer->dst_rect.w < min_dst_size ||
 		layer->dst_rect.h < min_dst_size) {
-		pr_err("invalid destination resolution (%dx%d)\n",
+		pr_err("invalid destination resolution (%dx%d)",
 		       layer->dst_rect.w, layer->dst_rect.h);
 		return -EINVAL;
 	}
@@ -1267,9 +1276,9 @@ static int __configure_pipe_params(struct msm_fb_data_type *mfd,
 		} else if ((mixer_mux == MDSS_MDP_MIXER_MUX_LEFT) &&
 		    ((layer->dst_rect.x + layer->dst_rect.w) > mixer->width)) {
 			if (layer->dst_rect.x >= mixer->width) {
-				pr_err("err dst_x can't lie in right half\n");
-				pr_err("%pS flags:0x%x dst x:%d w:%d lm_w:%d\n",
-					__builtin_return_address(0),
+				pr_err("%pS: err dst_x can't lie in right half",
+					__builtin_return_address(0));
+				pr_cont(" flags:0x%x dst x:%d w:%d lm_w:%d\n",
 					layer->flags, layer->dst_rect.x,
 					layer->dst_rect.w, mixer->width);
 				ret = -EINVAL;
@@ -1305,8 +1314,7 @@ static int __configure_pipe_params(struct msm_fb_data_type *mfd,
 
 	if (pipe->dst.x >= left_lm_w)
 		pipe->overfetch_disable |= OVERFETCH_DISABLE_RIGHT;
-			pr_debug("overfetch flags=%x\n",
-				pipe->overfetch_disable);
+		pr_debug("overfetch flags=%x\n", pipe->overfetch_disable);
 	} else {
 		pipe->overfetch_disable = 0;
 	}
@@ -1467,7 +1475,7 @@ static int __handle_buffer_fences(struct msm_fb_data_type *mfd,
 	}
 
 	i = mdss_fb_wait_for_fence(sync_pt_data);
-	if (i)
+	if (i > 0)
 		pr_warn("%s: waited on %d active fences\n",
 			sync_pt_data->fence_name, i);
 
@@ -1484,8 +1492,9 @@ static int __handle_buffer_fences(struct msm_fb_data_type *mfd,
 				sync_pt_data->fence_name, layer->buffer.fence);
 			ret = -EINVAL;
 			break;
+		} else {
+			sync_pt_data->acq_fen[acq_fen_count++] = fence;
 		}
-		sync_pt_data->acq_fen[acq_fen_count++] = fence;
 	}
 	sync_pt_data->acq_fen_cnt = acq_fen_count;
 	if (ret)
@@ -2102,10 +2111,10 @@ static int __multirect_validate_mode(struct msm_fb_data_type *mfd,
 			yoffset = 0;
 
 		/*
-		 * time multiplexed is possible only if the y position of layers
-		 * is not overlapping and there is sufficient time to buffer
-		 * 2 lines/tiles.  Otherwise use parallel fetch mode
-		 */
+		* time multiplexed is possible only if the y position of layers
+		* is not overlapping and there is sufficient time to buffer
+		* 2 lines/tiles.  Otherwise use parallel fetch mode
+		*/
 		threshold = 2;
 		if (is_ubwc) {
 			struct mdss_mdp_format_params_ubwc *uf;
@@ -2489,7 +2498,7 @@ static int __validate_layers(struct msm_fb_data_type *mfd,
 			}
 		}
 		rect_num = validate_info_list[i].multirect.num;
-		WARN_ON(rect_num >= MDSS_MDP_PIPE_MAX_RECTS);
+		BUG_ON(rect_num >= MDSS_MDP_PIPE_MAX_RECTS);
 
 		if (rec_ndx[rect_num] & layer_list[i].pipe_ndx) {
 			pr_err("duplicate layer found pipe_ndx=%d rect=%d (0x%x)\n",
@@ -2768,7 +2777,7 @@ int __is_cwb_requested(uint32_t commit_flags)
 
 	req = commit_flags & MDP_COMMIT_CWB_EN;
 	if (req && !test_bit(MDSS_CAPS_CWB_SUPPORTED, mdata->mdss_caps_map)) {
-		pr_err("CWB not supported\n");
+		pr_err("CWB not supported");
 		return -ENODEV;
 	}
 	return req;
@@ -2906,7 +2915,7 @@ int mdss_mdp_layer_pre_commit(struct msm_fb_data_type *mfd,
 
 	ret = __handle_buffer_fences(mfd, commit, layer_list);
 	if (ret) {
-		pr_err("failed to handle fences for fb: %d\n", mfd->index);
+		pr_err("failed to handle fences for fb: %d", mfd->index);
 		goto map_err;
 	}
 map_err:
