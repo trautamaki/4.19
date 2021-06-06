@@ -259,6 +259,7 @@ struct msm_vidc_enc_cvp_metadata_payload {
 #define MSM_VIDC_TRANSFER_HLG 18
 
 #define MSM_VIDC_EXTRADATA_VUI_DISPLAY_INFO 0x7F100006
+#define MSM_VIDC_EXTRADATA_YUVSTATS_INFO 0x7F100007
 struct msm_vidc_vui_display_info_payload {
 	__u32 video_signal_present_flag;
 	__u32 video_format;
