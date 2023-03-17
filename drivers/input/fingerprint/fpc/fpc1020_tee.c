@@ -69,7 +69,7 @@ static struct kernfs_node *soc_symlink = NULL;
 
 struct fpc1020_data {
 	struct device *dev;
-	struct wakeup_source ttw_wl;
+	struct wakeup_source* ttw_wl;
 	int irq_gpio;
 	int enable_gpio;
 	int rst_gpio;
@@ -541,7 +541,7 @@ static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 	if (fpc1020->screen_state)
 		return IRQ_HANDLED;
 
-	__pm_wakeup_event(&fpc1020->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
+	__pm_wakeup_event(fpc1020->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
 
 	/* Report button input to trigger CPU boost */
 	input_report_key(fpc1020->input_dev, KEY_FINGERPRINT, 1);
@@ -596,7 +596,7 @@ static int fpc1020_probe(struct platform_device *pdev)
 		goto exit;
 
 	rc = gpio_direction_input(fpc1020->irq_gpio);
-	
+
 	if (rc) {
 		dev_err(fpc1020->dev,
 			"gpio_direction_input (irq) failed.\n");
@@ -639,7 +639,7 @@ static int fpc1020_probe(struct platform_device *pdev)
 	rc = fpc1020_pinctrl_select(fpc1020, true);
 	if (rc)
 		goto exit;
-		
+
     #endif
     rc = fpc1020_input_init(fpc1020);
     if (rc)
@@ -675,7 +675,7 @@ static int fpc1020_probe(struct platform_device *pdev)
 	//disable_irq_wake( gpio_to_irq( fpc1020->irq_gpio ) );
 
 	enable_irq_wake( gpio_to_irq( fpc1020->irq_gpio ) );
-	wakeup_source_init(&fpc1020->ttw_wl, "fpc_ttw_wl");
+	fpc1020->ttw_wl = wakeup_source_register(NULL, "fpc_ttw_wl");
 	device_init_wakeup(fpc1020->dev, 1);
 
 	rc = sysfs_create_group(&dev->kobj, &attribute_group);
@@ -683,7 +683,7 @@ static int fpc1020_probe(struct platform_device *pdev)
 		dev_err(dev, "could not create sysfs\n");
 		goto exit;
 	}
-	
+
     #if 0 //changhua remove HW reset here,move to HAL,after spi cs pin become high
 	rc = gpio_direction_output(fpc1020->rst_gpio, 1);
 
@@ -695,10 +695,10 @@ static int fpc1020_probe(struct platform_device *pdev)
 
 	gpio_set_value(fpc1020->rst_gpio, 1);
 	udelay(FPC1020_RESET_HIGH1_US);
-	
+
 	gpio_set_value(fpc1020->rst_gpio, 0);
 	udelay(FPC1020_RESET_LOW_US);
-	
+
 	gpio_set_value(fpc1020->rst_gpio, 1);
 	udelay(FPC1020_RESET_HIGH2_US);
     #endif
@@ -716,7 +716,7 @@ static int fpc1020_probe(struct platform_device *pdev)
     *fingerchip/
     *   qtech    0            1             0
     *   Goodix   1            0             1
-    *   
+    *
     */
 
 	if(!dev->parent || !dev->parent->parent) {
