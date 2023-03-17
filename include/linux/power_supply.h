@@ -164,26 +164,8 @@ enum {
 enum power_supply_property {
 	/* Properties of type `int' */
 	POWER_SUPPLY_PROP_STATUS = 0,
-	POWER_SUPPLY_PROP_SET_ALLOW_READ_EXTERN_FG_IIC,
-	POWER_SUPPLY_PROP_CC_TO_CV_POINT,
-	POWER_SUPPLY_PROP_CHG_PROTECT_STATUS,
-	POWER_SUPPLY_PROP_FASTCHG_STATUS,
-	POWER_SUPPLY_PROP_FASTCHG_STARTING,
-	POWER_SUPPLY_CUTOFF_VOLT_WITH_CHARGER,
-	POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF,
-	POWER_SUPPLY_PROP_CHECK_USB_UNPLUG,
-	POWER_SUPPLY_PROP_OTG_SWITCH,
-	POWER_SUPPLY_PROP_SWITCH_DASH,
-	POWER_SUPPLY_PROP_NOTIFY_CHARGER_SET_PARAMETER,
-	POWER_SUPPLY_PROP_FG_CAPACITY,
-	POWER_SUPPLY_PROP_FG_VOLTAGE_NOW,
-	POWER_SUPPLY_PROP_FG_CURRENT_NOW,
-	POWER_SUPPLY_PROP_IS_AGING_TEST,
-	POWER_SUPPLY_PROP_BQ_SOC,
-	POWER_SUPPLY_PROP_OEM_TYPEC_CC_ORIENTATION,
 	POWER_SUPPLY_PROP_CHARGE_TYPE,
 	POWER_SUPPLY_PROP_HEALTH,
-	POWER_SUPPLY_PROP_BATTERY_HEALTH,
 	POWER_SUPPLY_PROP_PRESENT,
 	POWER_SUPPLY_PROP_ONLINE,
 	POWER_SUPPLY_PROP_AUTHENTIC,
@@ -391,14 +373,11 @@ enum power_supply_property {
 	POWER_SUPPLY_PROP_MANUFACTURER,
 	POWER_SUPPLY_PROP_BATTERY_TYPE,
 	POWER_SUPPLY_PROP_CYCLE_COUNTS,
-<<<<<<< HEAD
 	/*
 	 * Add local extensions for properties with string values between
 	 * MODEL_NAME and SERIAL_NUMBER. Don't add below SERIAL_NUMBER.
 	 */
 	POWER_SUPPLY_PROP_SERIAL_NUMBER,
-=======
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 };
 
 enum power_supply_type {
@@ -426,7 +405,6 @@ enum power_supply_type {
 	POWER_SUPPLY_TYPE_UFP,			/* Type-C UFP */
 	POWER_SUPPLY_TYPE_DFP,			/* Type-C DFP */
 	POWER_SUPPLY_TYPE_CHARGE_PUMP,		/* Charge Pump */
-<<<<<<< HEAD
 };
 
 enum power_supply_usb_type {
@@ -440,9 +418,6 @@ enum power_supply_usb_type {
 	POWER_SUPPLY_USB_TYPE_PD_DRP,		/* PD Dual Role Port */
 	POWER_SUPPLY_USB_TYPE_PD_PPS,		/* PD Programmable Power Supply */
 	POWER_SUPPLY_USB_TYPE_APPLE_BRICK_ID,	/* Apple Charging Method */
-=======
-	POWER_SUPPLY_TYPE_DASH,
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 };
 
 /* Indicates USB Type-C CC connection status */

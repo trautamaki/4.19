@@ -4,10 +4,7 @@
 
 #define pr_fmt(fmt)	"FG: %s: " fmt, __func__
 
-<<<<<<< HEAD
 #include <linux/debugfs.h>
-=======
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 #include <linux/ktime.h>
 #include <linux/of.h>
 #include <linux/spinlock.h>
@@ -20,7 +17,6 @@
 #include <linux/qpnp/qpnp-misc.h>
 #include "fg-core.h"
 #include "fg-reg.h"
-#include <linux/power/oem_external_fg.h>
 
 #define FG_GEN3_DEV_NAME	"qcom,fg-gen3"
 
@@ -240,7 +236,6 @@ struct fg_gen3_chip {
 	bool			ki_coeff_dischg_en;
 	bool			esr_fcc_ctrl_en;
 	bool			esr_flt_cold_temp_en;
-	bool                    use_external_fg;
 	bool			slope_limit_en;
 };
 
@@ -491,27 +486,6 @@ static ssize_t profile_dump_store(struct device *dev,
 }
 static DEVICE_ATTR_RW(profile_dump);
 
-static struct external_battery_gauge *external_fg;
-
-void external_battery_gauge_register(struct external_battery_gauge *batt_gauge)
-{
-        if (external_fg) {
-                external_fg = batt_gauge;
-                pr_err("qpnp-charger %s multiple battery gauge called\n",
-                                                                __func__);
-        } else {
-                external_fg = batt_gauge;
-        }
-}
-EXPORT_SYMBOL(external_battery_gauge_register);
-
-void external_battery_gauge_unregister(
-        struct external_battery_gauge *batt_gauge)
-{
-        external_fg = NULL;
-}
-EXPORT_SYMBOL(external_battery_gauge_unregister);
-
 static int fg_sram_dump_period_ms = 20000;
 static ssize_t sram_dump_period_ms_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
@@ -733,10 +707,7 @@ static bool is_debug_batt_id(struct fg_dev *fg)
 }
 
 #define DEBUG_BATT_SOC	67
-<<<<<<< HEAD
 #define BATT_MISS_SOC	50
-=======
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 #define EMPTY_SOC	0
 static int fg_get_prop_capacity(struct fg_dev *fg, int *val)
 {
@@ -763,10 +734,6 @@ static int fg_get_prop_capacity(struct fg_dev *fg, int *val)
 		return 0;
 	}
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	if (fg->charge_full) {
 		*val = FULL_CAPACITY;
 		return 0;
@@ -800,7 +767,6 @@ static int fg_batt_missing_config(struct fg_dev *fg, bool enable)
 	return rc;
 }
 
-#define OP_SW_DEFAULT_ID 200000
 static int fg_get_batt_id(struct fg_dev *fg)
 {
 	struct fg_gen3_chip *chip = container_of(fg, struct fg_gen3_chip, fg);
@@ -825,7 +791,7 @@ static int fg_get_batt_id(struct fg_dev *fg)
 	msleep(chip->dt.bmd_en_delay_ms);
 
 	fg_dbg(fg, FG_STATUS, "batt_id: %d\n", batt_id);
-	fg->batt_id_ohms = OP_SW_DEFAULT_ID;
+	fg->batt_id_ohms = batt_id;
 out:
 	ret = fg_batt_missing_config(fg, true);
 	if (ret < 0) {
@@ -837,10 +803,6 @@ out:
 	return rc;
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 static int fg_get_batt_profile(struct fg_dev *fg)
 {
 	struct fg_gen3_chip *chip = container_of(fg, struct fg_gen3_chip, fg);
@@ -872,10 +834,6 @@ static int fg_get_batt_profile(struct fg_dev *fg)
 		return rc;
 	}
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
 			&fg->bp.float_volt_uv);
 	if (rc < 0) {
@@ -1093,10 +1051,7 @@ static int fg_load_learned_cap_from_sram(struct fg_dev *fg)
 				chip->cl.learned_cc_uah, chip->cl.nom_cap_uah);
 			chip->cl.learned_cc_uah = chip->cl.nom_cap_uah;
 		}
-<<<<<<< HEAD
 
-=======
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 		rc = fg_save_learned_cap_to_sram(fg);
 		if (rc < 0)
 			pr_err("Error in saving learned_cc_uah, rc=%d\n", rc);
@@ -1145,11 +1100,7 @@ static void fg_cap_learning_post_process(struct fg_dev *fg)
 
 	max_inc_val = chip->cl.learned_cc_uah
 			* (1000 + chip->dt.cl_max_cap_inc);
-<<<<<<< HEAD
 	max_inc_val = div64_u64(max_inc_val, 1000);
-=======
-	do_div(max_inc_val, 1000);
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 
 	min_dec_val = chip->cl.learned_cc_uah
 			* (1000 - chip->dt.cl_max_cap_dec);
@@ -1220,15 +1171,8 @@ static int fg_cap_learning_process_full_data(struct fg_dev *fg)
 
 	delta_cc_uah = div64_u64(chip->cl.learned_cc_uah * cc_soc_delta_pct,
 				100);
-<<<<<<< HEAD
 	chip->cl.final_cc_uah = chip->cl.init_cc_uah + delta_cc_uah;
 	fg_dbg(fg, FG_CAP_LEARN, "Current cc_soc=%d cc_soc_delta_pct=%u total_cc_uah=%llu\n",
-=======
-
-	chip->cl.final_cc_uah = chip->cl.init_cc_uah + delta_cc_uah;
-
-	fg_dbg(fg, FG_CAP_LEARN, "Current cc_soc=%d cc_soc_delta_pct=%d total_cc_uah=%llu\n",
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 		cc_soc_sw, cc_soc_delta_pct, chip->cl.final_cc_uah);
 	return 0;
 }
@@ -1260,10 +1204,6 @@ static int fg_cap_learning_begin(struct fg_dev *fg, u32 batt_soc)
 	}
 
 	chip->cl.init_cc_soc_sw = cc_soc_sw;
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	fg_dbg(fg, FG_CAP_LEARN, "Capacity learning started @ battery SOC %d init_cc_soc_sw:%d\n",
 		batt_soc_msb, chip->cl.init_cc_soc_sw);
 out:
@@ -1327,10 +1267,6 @@ static void fg_cap_learning_update(struct fg_dev *fg)
 	fg_dbg(fg, FG_CAP_LEARN, "Chg_status: %d cl_active: %d batt_soc: %d\n",
 		fg->charge_status, chip->cl.active, batt_soc_msb);
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	/* Initialize the starting point of learning capacity */
 	if (!chip->cl.active) {
 		if (fg->charge_status == POWER_SUPPLY_STATUS_CHARGING) {
@@ -1353,10 +1289,6 @@ static void fg_cap_learning_update(struct fg_dev *fg)
 			chip->cl.init_cc_uah = 0;
 		}
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 		if (fg->charge_status == POWER_SUPPLY_STATUS_DISCHARGING) {
 			if (!input_present) {
 				fg_dbg(fg, FG_CAP_LEARN, "Capacity learning aborted @ battery SOC %d\n",
@@ -1616,10 +1548,6 @@ static int fg_charge_full_update(struct fg_dev *fg)
 	fg_dbg(fg, FG_STATUS, "msoc: %d bsoc: %x health: %d status: %d full: %d\n",
 		msoc, bsoc, fg->health, fg->charge_status,
 		fg->charge_full);
-<<<<<<< HEAD
-=======
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	if (fg->charge_done && !fg->charge_full) {
 		if (msoc >= 99 && fg->health == POWER_SUPPLY_HEALTH_GOOD) {
 			fg_dbg(fg, FG_STATUS, "Setting charge_full to true\n");
@@ -2837,7 +2765,7 @@ static bool is_profile_load_required(struct fg_dev *fg)
 					PROFILE_COMP_LEN);
 				pr_info("FG: available profile:\n");
 				dump_sram(fg, chip->batt_profile,
-				PROFILE_LOAD_WORD, PROFILE_LEN);
+					PROFILE_LOAD_WORD, PROFILE_LEN);
 			}
 			fg->profile_load_status = PROFILE_SKIPPED;
 			return false;
@@ -2954,10 +2882,7 @@ static void profile_load_work(struct work_struct *work)
 
 	if (!is_profile_load_required(fg))
 		goto done;
-<<<<<<< HEAD
 
-=======
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	clear_cycle_counter(fg);
 	mutex_lock(&chip->cl.lock);
 	chip->cl.learned_cc_uah = 0;
@@ -3710,11 +3635,6 @@ end_work:
 	mutex_unlock(&chip->ttf.lock);
 }
 
-static int fg_get_prop_real_capacity(struct fg_dev *fg, int *val)
-{
-        return fg_get_msoc(fg, val);
-}
-
 /* PSY CALLBACKS STAY HERE */
 
 static int fg_psy_get_property(struct power_supply *psy,
@@ -3727,13 +3647,7 @@ static int fg_psy_get_property(struct power_supply *psy,
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_CAPACITY:
-		if (!get_extern_fg_regist_done())
-			pval->intval = get_prop_pre_shutdown_soc();
-		else if (chip->use_external_fg && external_fg
-				&& external_fg->get_battery_soc)
-			pval->intval = external_fg->get_battery_soc();
-		else
-			pval->intval = 50;
+		rc = fg_get_prop_capacity(fg, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_REAL_CAPACITY:
 		rc = fg_get_prop_real_capacity(fg, &pval->intval);
@@ -3742,37 +3656,16 @@ static int fg_psy_get_property(struct power_supply *psy,
 		rc = fg_get_msoc_raw(fg, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		if (chip->use_external_fg && external_fg
-				&& external_fg->get_battery_mvolts)
-			pval->intval = external_fg->get_battery_mvolts();
+		if (fg->battery_missing)
+			pval->intval = 3700000;
 		else
-			pval->intval = 4000000; /* 4000mV */
+			rc = fg_get_battery_voltage(fg, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
-		if (chip->use_external_fg && external_fg
-			&& external_fg->get_average_current)
-			pval->intval = external_fg->get_average_current();
-		else
-			pval->intval = 0;
+		rc = fg_get_battery_current(fg, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_TEMP:
-		if (!get_extern_fg_regist_done()
-			&& get_extern_bq_present())
-			pval->intval = 250;
-		else if (chip->use_external_fg && external_fg
-			&& external_fg->get_average_current){
-			pval->intval = external_fg->get_battery_temperature();
-		} else
-			pval->intval = -400;
-		break;
-	case POWER_SUPPLY_PROP_BATTERY_HEALTH:
-		if (chip->use_external_fg && external_fg
-			&& external_fg->get_batt_health)
-			pval->intval = external_fg->get_batt_health();
-		else if (get_extern_fg_regist_done() == false)
-			pval->intval = -1;
-		else
-			pval->intval = -1;
+		rc = fg_get_battery_temp(fg, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_COLD_TEMP:
 		rc = fg_get_jeita_threshold(fg, JEITA_COLD, &pval->intval);
@@ -3876,31 +3769,6 @@ static int fg_psy_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_FG_RESET_CLOCK:
 		pval->intval = 0;
 		break;
-<<<<<<< HEAD
-=======
-        case POWER_SUPPLY_PROP_BQ_SOC:
-		if (chip->use_external_fg && external_fg
-			&& external_fg->get_batt_bq_soc)
-			pval->intval = external_fg->get_batt_bq_soc();
-		else
-			pval->intval = 50;
-		break;
-        case POWER_SUPPLY_PROP_FG_CAPACITY:
-		 rc = fg_get_prop_capacity(&chip->fg, &pval->intval);
-                break;
-        case POWER_SUPPLY_PROP_FG_VOLTAGE_NOW:
-		if (chip->fg.battery_missing)
-			pval->intval = 3700000;
-		else
-			rc = fg_get_battery_voltage(&chip->fg, &pval->intval);
-		break;
-        case POWER_SUPPLY_PROP_FG_CURRENT_NOW:
-		rc = fg_get_battery_current(&chip->fg, &pval->intval);
-		break;
-	case POWER_SUPPLY_PROP_REAL_CAPACITY:
-		rc = fg_get_prop_real_capacity(&chip->fg, &pval->intval);
-		break;
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	default:
 		pr_err("unsupported property %d\n", psp);
 		rc = -EINVAL;
@@ -3913,7 +3781,6 @@ static int fg_psy_get_property(struct power_supply *psy,
 	return 0;
 }
 
-<<<<<<< HEAD
 #define BCL_RESET_RETRY_COUNT 4
 static int fg_bcl_reset(struct fg_dev *chip)
 {
@@ -4007,14 +3874,6 @@ unlock:
 	else
 		return rc;
 }
-=======
-static void oem_update_cc_cv_setpoint(
-        struct fg_gen3_chip *chip, int cv_float_point);
-static void oneplus_set_allow_read_iic(
-        struct fg_gen3_chip *chip, bool status);
-static void oneplus_set_lcd_off_status(
-        struct fg_gen3_chip *chip, bool status);
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 
 static int fg_psy_set_property(struct power_supply *psy,
 				  enum power_supply_property psp,
@@ -4025,27 +3884,6 @@ static int fg_psy_set_property(struct power_supply *psy,
 	int rc = 0;
 
 	switch (psp) {
-<<<<<<< HEAD
-=======
-        case POWER_SUPPLY_PROP_CC_TO_CV_POINT:
-                oem_update_cc_cv_setpoint(chip, pval->intval);
-                break;
-        case POWER_SUPPLY_PROP_SET_ALLOW_READ_EXTERN_FG_IIC:
-                oneplus_set_allow_read_iic(chip, pval->intval);
-                break;
-        case POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF:
-                oneplus_set_lcd_off_status(chip, pval->intval);
-                break;
-	case POWER_SUPPLY_PROP_CYCLE_COUNT_ID:
-		if ((pval->intval > 0) && (pval->intval <= BUCKET_COUNT)) {
-			chip->cyc_ctr.id = pval->intval;
-		} else {
-			pr_err("rejecting invalid cycle_count_id = %d\n",
-				pval->intval);
-			return -EINVAL;
-		}
-		break;
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_VOLTAGE:
 		rc = fg_set_constant_chg_voltage(fg, pval->intval);
 		break;
@@ -4240,14 +4078,7 @@ static enum power_supply_property fg_psy_props[] = {
 	POWER_SUPPLY_PROP_CONSTANT_CHARGE_VOLTAGE,
 	POWER_SUPPLY_PROP_CC_STEP,
 	POWER_SUPPLY_PROP_CC_STEP_SEL,
-<<<<<<< HEAD
 	POWER_SUPPLY_PROP_FG_RESET_CLOCK,
-=======
-	POWER_SUPPLY_PROP_CC_SOC,
-	POWER_SUPPLY_PROP_SET_ALLOW_READ_EXTERN_FG_IIC,
-	POWER_SUPPLY_PROP_BQ_SOC,
-	POWER_SUPPLY_PROP_BATTERY_HEALTH,
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 };
 
 static const struct power_supply_desc fg_psy_desc = {
@@ -5286,10 +5117,6 @@ static int fg_parse_dt(struct fg_gen3_chip *chip)
 	else
 		chip->dt.rsense_sel = (u8)temp & SOURCE_SELECT_MASK;
 
-	chip->use_external_fg =
-	of_property_read_bool(node, "oem,use_external_fg");
-	pr_info("use_external_fg=%d\n", chip->use_external_fg);
-
 	chip->dt.jeita_thresholds[JEITA_COLD] = DEFAULT_BATT_TEMP_COLD;
 	chip->dt.jeita_thresholds[JEITA_COOL] = DEFAULT_BATT_TEMP_COOL;
 	chip->dt.jeita_thresholds[JEITA_WARM] = DEFAULT_BATT_TEMP_WARM;
@@ -5560,33 +5387,6 @@ static void fg_cleanup(struct fg_gen3_chip *chip)
 	dev_set_drvdata(fg->dev, NULL);
 }
 
-<<<<<<< HEAD
-=======
-static void oem_update_cc_cv_setpoint(
-struct fg_gen3_chip *chip, int cv_float_point)
-{
-        /* TODO: write CC_CV_SETPOINT_REG */
-}
-
-static void oneplus_set_allow_read_iic(struct fg_gen3_chip *chip, bool status)
-{
-        if (chip->use_external_fg && external_fg
-                        && external_fg->set_allow_reading)
-                external_fg->set_allow_reading(status);
-        else
-                pr_info("set allow read extern fg iic fail\n");
-}
-
-static void oneplus_set_lcd_off_status(struct fg_gen3_chip *chip, bool status)
-{
-        if (chip->use_external_fg && external_fg
-                        && external_fg->set_lcd_off_status)
-                external_fg->set_lcd_off_status(status);
-        else
-                pr_info("set lcd off status fail\n");
-}
-
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 static int fg_gen3_probe(struct platform_device *pdev)
 {
 	struct fg_gen3_chip *chip;
@@ -5777,15 +5577,12 @@ static int fg_gen3_probe(struct platform_device *pdev)
 
 	fg_debugfs_create(fg);
 
-<<<<<<< HEAD
 	rc = sysfs_create_groups(&fg->dev->kobj, fg_groups);
 	if (rc < 0) {
 		pr_err("Failed to create sysfs files rc=%d\n", rc);
 		goto exit;
 	}
 
-=======
->>>>>>> b4b8dfab0e8b9 (drivers: import changes to the QPNP SMB Battery Charger from kernel 4.4 to support Dash charge)
 	rc = fg_get_battery_voltage(fg, &volt_uv);
 	if (!rc)
 		rc = fg_get_prop_capacity(fg, &msoc);
