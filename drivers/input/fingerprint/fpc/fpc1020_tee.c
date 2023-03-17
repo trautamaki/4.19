@@ -69,7 +69,7 @@ static struct kernfs_node *soc_symlink = NULL;
 
 struct fpc1020_data {
 	struct device *dev;
-	struct wakeup_source ttw_wl;
+	struct wakeup_source* ttw_wl;
 	int irq_gpio;
 	int enable_gpio;
 	int rst_gpio;
@@ -541,7 +541,7 @@ static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 	if (fpc1020->screen_state)
 		return IRQ_HANDLED;
 
-	__pm_wakeup_event(&fpc1020->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
+	__pm_wakeup_event(fpc1020->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
 
 	/* Report button input to trigger CPU boost */
 	input_report_key(fpc1020->input_dev, KEY_FINGERPRINT, 1);
