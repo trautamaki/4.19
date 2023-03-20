@@ -1,15 +1,5 @@
-/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
+/* SPDX-License-Identifier: GPL-2.0-only */
+/* Copyright (c) 2012-2021, The Linux Foundation. All rights reserved. */
 
 #ifndef MDSS_DSI_H
 #define MDSS_DSI_H
@@ -371,7 +361,7 @@ struct dsi_panel_timing {
 
 struct dsi_kickoff_action {
 	struct list_head act_entry;
-	void (*action)(void *);
+	void (*action)(void *p);
 	void *data;
 };
 
@@ -726,6 +716,7 @@ void mdss_dsi_set_reg(struct mdss_dsi_ctrl_pdata *ctrl, int off,
 	u32 mask, u32 val);
 int mdss_dsi_phy_pll_reset_status(struct mdss_dsi_ctrl_pdata *ctrl);
 int mdss_dsi_check_panel_status(struct mdss_dsi_ctrl_pdata *ctrl, void *arg);
+void mdss_dsi_ctrl_phy_reset(struct mdss_dsi_ctrl_pdata *ctrl);
 
 void mdss_dsi_debug_bus_init(struct mdss_dsi_data *sdata);
 int mdss_dsi_get_dt_vreg_data(struct device *dev,
