@@ -422,6 +422,12 @@ dtb-$(CONFIG_ARCH_SDM429) += sdm429-mtp.dtb \
 	sda429-cdp.dtb
 endif
 
+dtb-$(CONFIG_ARCH_MSM8998) += cheeseburger-v2.1-pvt.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += dumpling-v2.1-dvt.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += dumpling-v2.1-pvt.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += dumpling-v2.1-Second_Resource.dtb
+dtb-$(CONFIG_ARCH_MSM8998) += dumpling-v2.1-backup.dtb
+
 always		:= $(dtb-y)
 subdir-y	:= $(dts-dirs)
 clean-files    := *.dtb *.dtbo
