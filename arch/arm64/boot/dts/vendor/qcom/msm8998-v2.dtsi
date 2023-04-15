@@ -1266,11 +1266,11 @@
 		"rx_lane0_sync_clk",
 		"rx_lane1_sync_clk";
 	clocks =
-		<&clock_gcc GCC_UFS_AXI_HW_CTL_CLK>,
+		<&clock_gcc GCC_UFS_AXI_CLK>,
 		<&clock_gcc GCC_AGGRE1_UFS_AXI_CLK>,
 		<&clock_gcc GCC_UFS_AHB_CLK>,
-		<&clock_gcc GCC_UFS_UNIPRO_CORE_HW_CTL_CLK>,
-		<&clock_gcc GCC_UFS_ICE_CORE_HW_CTL_CLK>,
+		<&clock_gcc GCC_UFS_UNIPRO_CORE_CLK>,
+		<&clock_gcc GCC_UFS_ICE_CORE_CLK>,
 		<&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
 		<&clock_gcc GCC_UFS_TX_SYMBOL_0_CLK>,
 		<&clock_gcc GCC_UFS_RX_SYMBOL_0_CLK>,
