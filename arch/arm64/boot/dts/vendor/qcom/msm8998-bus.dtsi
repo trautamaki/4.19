@@ -129,8 +129,8 @@
 			qcom,base-offset = <16384>;
 			qcom,util-fact = <153>;
 			clock-names = "bus_clk", "bus_a_clk";
-			clocks = <&clock_rpmcc MMSSNOC_AXI_CLK>,
-				<&clock_rpmcc MMSSNOC_AXI_A_CLK>;
+			clocks = <&clock_rpmcc RPM_SMD_MMSSNOC_AXI_CLK>,
+				<&clock_rpmcc RPM_SMD_MMSSNOC_AXI_A_CLK>;
 			clk-camss-ahb-no-rate-supply =
 					<&gdsc_camss_top>;
 			clk-video-ahb-no-rate-supply =
@@ -146,12 +146,12 @@
 				"clk-video-ahb-no-rate",
 				"clk-video-axi-no-rate";
 				clocks =
-				<&clock_rpmcc MMSSNOC_AXI_CLK>,
+				<&clock_rpmcc RPM_SMD_MMSSNOC_AXI_CLK>,
 				<&clock_gcc GCC_MMSS_NOC_CFG_AHB_CLK>,
-				<&clock_mmss MMSS_MNOC_AHB_CLK>,
-				<&clock_mmss MMSS_CAMSS_AHB_CLK>,
-				<&clock_mmss MMSS_VIDEO_AHB_CLK>,
-				<&clock_mmss MMSS_VIDEO_AXI_CLK>;
+				<&clock_mmss MNOC_AHB_CLK>,
+				<&clock_mmss CAMSS_AHB_CLK>,
+				<&clock_mmss VIDEO_AHB_CLK>,
+				<&clock_mmss VIDEO_AXI_CLK>;
 			};
 
 		};
@@ -537,8 +537,8 @@
 				"clk-mdss-ahb-no-rate",
 				"clk-mdss-axi-no-rate";
 				clocks =
-				<&clock_mmss MMSS_MDSS_AHB_CLK>,
-				<&clock_mmss MMSS_MDSS_AXI_CLK>;
+				<&clock_mmss MDSS_AHB_CLK>,
+				<&clock_mmss MDSS_AXI_CLK>;
 			};
 
 		};
@@ -1240,7 +1240,7 @@
 			qcom,slv-rpm-id = <ICBID_SLAVE_VMEM_CFG>;
 			qcom,enable-only-clk;
 			clock-names = "node_clk";
-			clocks = <&clock_mmss MMSS_MNOC_MAXI_CLK>;
+			clocks = <&clock_mmss MNOC_MAXI_CLK>;
 		};
 
 		slv_mmss_clk_xpu_cfg:slv-mmss-clk-xpu-cfg {
@@ -1304,7 +1304,7 @@
 			qcom,slv-rpm-id = <ICBID_SLAVE_MNOC_BIMC>;
 			qcom,enable-only-clk;
 			clock-names = "node_clk";
-			clocks = <&clock_rpmcc MMSSNOC_AXI_CLK>;
+			clocks = <&clock_rpmcc RPM_SMD_MMSSNOC_AXI_CLK>;
 		};
 
 		slv_vmem: slv-vmem {
@@ -1316,7 +1316,7 @@
 			qcom,bus-dev = <&fab_mnoc>;
 			qcom,slv-rpm-id = <ICBID_SLAVE_VMEM>;
 			clock-names = "node_clk";
-			clocks = <&clock_mmss MMSS_MNOC_MAXI_CLK>;
+			clocks = <&clock_mmss MNOC_MAXI_CLK>;
 		};
 
 		slv_srvc_mnoc:slv-srvc-mnoc {
