@@ -6,6 +6,9 @@
 #ifndef _DT_BINDINGS_CLK_MSM_MMCC_8998_H
 #define _DT_BINDINGS_CLK_MSM_MMCC_8998_H
 
+#define MMSS_CAMSS_JPEG0_VOTE_CLK		0
+#define MMSS_CAMSS_JPEG0_DMA_VOTE_CLK		1
+
 #define MMPLL0                      0
 #define MMPLL0_OUT_EVEN                 1
 #define MMPLL1                      2
