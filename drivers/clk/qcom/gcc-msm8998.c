@@ -1300,6 +1300,18 @@ static struct clk_branch gcc_mss_snoc_axi_clk = {
 	},
 };
 
+static struct clk_branch gcc_dcc_ahb_clk = {
+	.halt_reg = 0x84004,
+	.clkr = {
+		.enable_reg = 0x84004,
+		.enable_mask = BIT(0),
+		.hw.init = &(struct clk_init_data) {
+			.name = "gcc_dcc_ahb_clk",
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
 static struct clk_branch gcc_mss_mnoc_bimc_axi_clk = {
 	.halt_reg = 0x8a004,
 	.halt_check = BRANCH_HALT,
@@ -2065,6 +2077,19 @@ static struct clk_branch gcc_hmss_at_clk = {
 	},
 };
 
+static struct clk_branch gcc_gpu_iref_clk = {
+	.halt_reg = 0x88010,
+	.clkr = {
+		.enable_reg = 0x88010,
+		.enable_mask = BIT(0),
+		.hw.init = &(struct clk_init_data) {
+			.name = "gcc_gpu_iref_clk",
+			.flags = CLK_ENABLE_HAND_OFF,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
 static struct clk_branch gcc_hmss_dvm_bus_clk = {
 	.halt_reg = 0x4808c,
 	.halt_check = BRANCH_HALT,
@@ -2747,6 +2772,18 @@ static struct gdsc usb_30_gdsc = {
 	.flags = VOTABLE,
 };
 
+static struct clk_branch hlos1_vote_lpass_adsp_smmu_clk = {
+	.halt_reg = 0x7D014,
+	.clkr = {
+		.enable_reg = 0x7D014,
+		.enable_mask = BIT(0),
+		.hw.init = &(struct clk_init_data) {
+			.name = "hlos1_vote_lpass_adsp_smmu_clk",
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
 static struct clk_regmap *gcc_msm8998_clocks[] = {
 	[BLSP1_QUP1_I2C_APPS_CLK_SRC] = &blsp1_qup1_i2c_apps_clk_src.clkr,
 	[BLSP1_QUP1_SPI_APPS_CLK_SRC] = &blsp1_qup1_spi_apps_clk_src.clkr,
@@ -2921,6 +2958,9 @@ static struct clk_regmap *gcc_msm8998_clocks[] = {
 	[GCC_MSS_GPLL0_DIV_CLK_SRC] = &gcc_mss_gpll0_div_clk_src.clkr,
 	[GCC_MSS_SNOC_AXI_CLK] = &gcc_mss_snoc_axi_clk.clkr,
 	[GCC_MSS_MNOC_BIMC_AXI_CLK] = &gcc_mss_mnoc_bimc_axi_clk.clkr,
+	[HLOS1_VOTE_LPASS_ADSP_SMMU_CLK] = &hlos1_vote_lpass_adsp_smmu_clk.clkr,
+	[GCC_GPU_IREF_CLK] = &gcc_gpu_iref_clk.clkr,
+	[GCC_DCC_AHB_CLK] = &gcc_dcc_ahb_clk.clkr,
 };
 
 static struct gdsc *gcc_msm8998_gdscs[] = {

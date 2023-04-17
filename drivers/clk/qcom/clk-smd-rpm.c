@@ -1205,6 +1205,11 @@ DEFINE_CLK_SMD_RPM_XO_BUFFER_PINCTRL(msm8998, rf_clk2_pin, rf_clk2_a_pin, 5);
 DEFINE_CLK_SMD_RPM_XO_BUFFER(msm8998, rf_clk3, rf_clk3_a, 6);
 DEFINE_CLK_SMD_RPM_XO_BUFFER_PINCTRL(msm8998, rf_clk3_pin, rf_clk3_a_pin, 6);
 
+static DEFINE_CLK_BRANCH_VOTER(cxo_pil_spss_clk, cxo);
+
+/* Voter Branch clocks */
+static DEFINE_CLK_BRANCH_VOTER(cxo_pil_ssc_clk, cxo);
+
 static struct clk_hw *msm8998_clks[] = {
 	[RPM_SMD_SNOC_CLK] = &msm8998_snoc_clk.hw,
 	[RPM_SMD_SNOC_A_CLK] = &msm8998_snoc_a_clk.hw,
@@ -1238,6 +1243,12 @@ static struct clk_hw *msm8998_clks[] = {
 	[RPM_SMD_RF_CLK3_A] = &msm8998_rf_clk3_a.hw,
 	[RPM_SMD_RF_CLK3_PIN] = &msm8998_rf_clk3_pin.hw,
 	[RPM_SMD_RF_CLK3_A_PIN] = &msm8998_rf_clk3_a_pin.hw,
+	[CXO_DWC3_CLK]	= &cxo_dwc3_clk.hw,
+	[CXO_SMD_LPM_CLK]	= &cxo_lpm_clk.hw,
+	[CXO_SMD_OTG_CLK]	= &cxo_otg_clk.hw,
+	[CXO_SMD_PIL_LPASS_CLK]	= &cxo_pil_lpass_clk.hw,
+	[CXO_SMD_PIL_SSC_CLK]	= &cxo_pil_ssc_clk.hw,
+	[CXO_SMD_PIL_SPSS_CLK]	= &cxo_pil_spss_clk.hw,
 };
 
 static const struct rpm_smd_clk_desc rpm_clk_msm8998 = {
