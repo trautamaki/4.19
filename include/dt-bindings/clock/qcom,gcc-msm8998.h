@@ -198,6 +198,10 @@
 #define AGGRE2_SNOC_NORTH_AXI					181
 #define SSC_XO							182
 #define SSC_CNOC_AHBS_CLK					183
+#define GPLL0_OUT_MSSCC					184
+#define HLOS1_VOTE_LPASS_ADSP_SMMU_CLK		185
+#define GCC_GPU_IREF_CLK			186
+#define GCC_DCC_AHB_CLK				187
 
 #define PCIE_0_GDSC						0
 #define UFS_GDSC						1

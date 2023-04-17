@@ -6,6 +6,9 @@
 #ifndef _DT_BINDINGS_CLK_MSM_MMCC_8998_H
 #define _DT_BINDINGS_CLK_MSM_MMCC_8998_H
 
+#define MMSS_CAMSS_JPEG0_VOTE_CLK		0
+#define MMSS_CAMSS_JPEG0_DMA_VOTE_CLK		1
+
 #define MMPLL0                      0
 #define MMPLL0_OUT_EVEN                 1
 #define MMPLL1                      2
@@ -152,6 +155,17 @@
 #define MNOC_MAXI_CLK                   143
 #define VMEM_MAXI_CLK                   144
 #define VMEM_AHB_CLK                    145
+#define MMSS_CAMSS_GP0_CLK				146
+#define MMSS_CAMSS_GP1_CLK				147
+#define DP_GTC_CLK_SRC					148
+#define SNOC_DVM_AXI_CLK				149
+#define CAMSS_GP0_CLK					150
+#define MISC_CXO_CLK					151
+#define MDSS_BYTE0_INTF_DIV_CLK			152
+#define MDSS_BYTE1_INTF_DIV_CLK			153
+#define MDSS_DP_GTC_CLK					154
+#define CAMSS_GP0_CLK_SRC               155
+#define CAMSS_GP1_CLK_SRC               156
 
 #define SPDM_BCR                    0
 #define SPDM_RM_BCR                 1

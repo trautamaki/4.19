@@ -1183,6 +1183,9 @@ static const struct rpm_smd_clk_desc rpm_clk_qm215 = {
 };
 
 /* msm8998 */
+DEFINE_CLK_SMD_RPM_BRANCH(msm8998, bi_tcxo, bi_tcxo_ao, QCOM_SMD_RPM_MISC_CLK,
+			  0, 19200000);
+DEFINE_CLK_SMD_RPM(msm8998, bimc_clk, bimc_a_clk, QCOM_SMD_RPM_MEM_CLK, 0);
 DEFINE_CLK_SMD_RPM(msm8998, snoc_clk, snoc_a_clk, QCOM_SMD_RPM_BUS_CLK, 1);
 DEFINE_CLK_SMD_RPM(msm8998, cnoc_clk, cnoc_a_clk, QCOM_SMD_RPM_BUS_CLK, 2);
 DEFINE_CLK_SMD_RPM(msm8998, ce1_clk, ce1_a_clk, QCOM_SMD_RPM_CE_CLK, 0);
@@ -1205,7 +1208,15 @@ DEFINE_CLK_SMD_RPM_XO_BUFFER_PINCTRL(msm8998, rf_clk2_pin, rf_clk2_a_pin, 5);
 DEFINE_CLK_SMD_RPM_XO_BUFFER(msm8998, rf_clk3, rf_clk3_a, 6);
 DEFINE_CLK_SMD_RPM_XO_BUFFER_PINCTRL(msm8998, rf_clk3_pin, rf_clk3_a_pin, 6);
 
+static DEFINE_CLK_BRANCH_VOTER(bi_tcxo_pil_spss_clk, bi_tcxo);
+
+/* Voter Branch clocks */
+static DEFINE_CLK_BRANCH_VOTER(bi_tcxo_dwc3_clk, bi_tcxo);
+static DEFINE_CLK_BRANCH_VOTER(bi_tcxo_pil_ssc_clk, bi_tcxo);
+
 static struct clk_hw *msm8998_clks[] = {
+	[RPM_SMD_XO_CLK_SRC]	= &msm8998_bi_tcxo.hw,
+	[RPM_SMD_XO_A_CLK_SRC]	= &msm8998_bi_tcxo_ao.hw,
 	[RPM_SMD_SNOC_CLK] = &msm8998_snoc_clk.hw,
 	[RPM_SMD_SNOC_A_CLK] = &msm8998_snoc_a_clk.hw,
 	[RPM_SMD_CNOC_CLK] = &msm8998_cnoc_clk.hw,
@@ -1238,10 +1249,17 @@ static struct clk_hw *msm8998_clks[] = {
 	[RPM_SMD_RF_CLK3_A] = &msm8998_rf_clk3_a.hw,
 	[RPM_SMD_RF_CLK3_PIN] = &msm8998_rf_clk3_pin.hw,
 	[RPM_SMD_RF_CLK3_A_PIN] = &msm8998_rf_clk3_a_pin.hw,
+	[CXO_SMD_DWC3_CLK]	= &bi_tcxo_dwc3_clk.hw,
+	[CXO_SMD_LPM_CLK]	= &bi_tcxo_lpm_clk.hw,
+	[CXO_SMD_OTG_CLK]	= &bi_tcxo_otg_clk.hw,
+	[CXO_SMD_PIL_LPASS_CLK]	= &bi_tcxo_pil_lpass_clk.hw,
+	[CXO_SMD_PIL_SSC_CLK]	= &bi_tcxo_pil_ssc_clk.hw,
+	[CXO_SMD_PIL_SPSS_CLK]	= &bi_tcxo_pil_spss_clk.hw,
 };
 
 static const struct rpm_smd_clk_desc rpm_clk_msm8998 = {
 	.clks = msm8998_clks,
+	.num_rpm_clks = RPM_SMD_CNOC_PERIPH_A_CLK,
 	.num_clks = ARRAY_SIZE(msm8998_clks),
 };
 
@@ -1265,7 +1283,7 @@ static int rpm_smd_clk_probe(struct platform_device *pdev)
 	struct clk *clk;
 	struct rpm_cc *rcc;
 	struct clk_onecell_data *data;
-	int ret, is_bengal, is_scuba, is_sdm660, is_qm215, is_sdm439;
+	int ret, is_bengal, is_scuba, is_sdm660, is_msm8998, is_qm215, is_sdm439;
 	size_t num_clks, i;
 	struct clk_hw **hw_clks;
 	const struct rpm_smd_clk_desc *desc;
@@ -1284,6 +1302,9 @@ static int rpm_smd_clk_probe(struct platform_device *pdev)
 	is_sdm660 = of_device_is_compatible(pdev->dev.of_node,
 						"qcom,rpmcc-sdm660");
 
+	is_msm8998 = of_device_is_compatible(pdev->dev.of_node,
+						"qcom,rpmcc-msm8998");
+
 	is_qm215 = of_device_is_compatible(pdev->dev.of_node,
 						"qcom,rpmcc-qm215");
 
@@ -1292,6 +1313,12 @@ static int rpm_smd_clk_probe(struct platform_device *pdev)
 
 	if (is_sdm660) {
 		ret = clk_vote_bimc(&sdm660_bimc_clk.hw, INT_MAX);
+		if (ret < 0)
+			return ret;
+	}
+
+	if (is_msm8998) {
+		ret = clk_vote_bimc(&msm8998_bimc_clk.hw, INT_MAX);
 		if (ret < 0)
 			return ret;
 	}
@@ -1386,6 +1413,16 @@ static int rpm_smd_clk_probe(struct platform_device *pdev)
 		clk_prepare_enable(snoc_keepalive_a_clk.hw.clk);
 	} else if (is_sdm660) {
 		clk_prepare_enable(sdm660_cxo_a.hw.clk);
+
+		/* Hold an active set vote for the cnoc_periph resource */
+		clk_set_rate(cnoc_periph_keepalive_a_clk.hw.clk, 19200000);
+		clk_prepare_enable(cnoc_periph_keepalive_a_clk.hw.clk);
+	} else if (is_msm8998) {
+		/*
+		 * Keep an active vote on bi_tcxo in case no other driver
+		 * votes for it.
+		 */
+		clk_prepare_enable(msm8998_bi_tcxo_ao.hw.clk);
 
 		/* Hold an active set vote for the cnoc_periph resource */
 		clk_set_rate(cnoc_periph_keepalive_a_clk.hw.clk, 19200000);
