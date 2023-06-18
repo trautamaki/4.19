@@ -1903,7 +1903,7 @@
 		pinctrl-0 = <&ufs_dev_reset_assert>;
 		pinctrl-1 = <&ufs_dev_reset_deassert>;
 
-		resets = <&clock_gcc GCC_UFS_BCR>;
+		resets = <&clock_gcc UFS_BCR>;
 		reset-names = "core_reset";
 
 		status = "disabled";
@@ -1947,7 +1947,7 @@
 		qcom,core-clk-rate = <120000000>;
 		qcom,core-clk-rate-hs = <60000000>;
 
-		resets = <&clock_gcc GCC_USB_30_BCR>;
+		resets = <&clock_gcc USB_30_BCR>;
 		reset-names = "core_reset";
 
 		dwc3@a800000 {
@@ -2032,7 +2032,7 @@
 
 		clock-names =  "ref_clk_src", "ref_clk", "cfg_ahb_clk";
 
-		resets = <&clock_gcc GCC_QUSB2PHY_PRIM_BCR>;
+		resets = <&clock_gcc QUSB2PHY_PRIM_BCR>;
 		reset-names = "phy_reset";
 	};
 
@@ -2188,8 +2188,8 @@
 		clock-names = "aux_clk", "pipe_clk", "cfg_ahb_clk",
 				"ref_clk_src", "ref_clk";
 
-		resets = <&clock_gcc GCC_USB3_PHY_BCR>,
-			 <&clock_gcc GCC_USB3PHY_PHY_BCR>;
+		resets = <&clock_gcc USB3_PHY_BCR>,
+			 <&clock_gcc USB3PHY_PHY_BCR>;
 		reset-names = "phy_reset", "phy_phy_reset";
 	};
 
@@ -2854,9 +2854,9 @@
 					<0>, <0>, <0>, <0>, <0>, <0>,
 					<0>, <0>;
 
-		resets = <&clock_gcc GCC_PCIE_PHY_BCR>,
-			 <&clock_gcc GCC_PCIE_0_PHY_BCR>,
-			 <&clock_gcc GCC_PCIE_0_PHY_BCR>;
+		resets = <&clock_gcc PCIE_PHY_BCR>,
+			 <&clock_gcc PCIE_0_PHY_BCR>,
+			 <&clock_gcc PCIE_0_PHY_BCR>;
 
 		reset-names = "pcie_phy_reset",
 				"pcie_0_phy_reset",
@@ -2930,12 +2930,12 @@
 		qcom,proxy-reg-names = "vdd";
 		qcom,mas-crypto = <&mas_crypto_c0>;
 
-		clocks = <&clock_mmss VIDEO_CORE_CLK>,
-			 <&clock_mmss MNOC_AHB_CLK>,
-			 <&clock_mmss VIDEO_AHB_CLK>,
+		clocks = <&clock_mmss MMSS_VIDEO_CORE_CLK>,
+			 <&clock_mmss MMSS_MNOC_AHB_CLK>,
+			 <&clock_mmss MMSS_VIDEO_AHB_CLK>,
 			 <&clock_rpmcc RPM_SMD_MMSSNOC_AXI_CLK>,
-			 <&clock_mmss VIDEO_AXI_CLK>,
-			 <&clock_mmss VIDEO_MAXI_CLK>;
+			 <&clock_mmss MMSS_VIDEO_AXI_CLK>,
+			 <&clock_mmss MMSS_VIDEO_MAXI_CLK>;
 		clock-names = "core_clk", "mnoc_ahb_clk", "iface_clk",
 			      "noc_axi_clk", "bus_clk", "maxi_clk";
 		qcom,proxy-clock-names = "core_clk","mnoc_ahb_clk",
@@ -3364,8 +3364,8 @@
 
 &gdsc_bimc_smmu {
 	clock-names = "bus_clk", "mem_clk";
-	clocks = <&clock_mmss BIMC_SMMU_AXI_CLK>,
-		 <&clock_mmss BIMC_SMMU_AHB_CLK>;
+	clocks = <&clock_mmss MMSS_BIMC_SMMU_AXI_CLK>,
+		 <&clock_mmss MMSS_BIMC_SMMU_AHB_CLK>;
 	proxy-supply = <&gdsc_bimc_smmu>;
 	qcom,proxy-consumer-enable;
 	status = "ok";

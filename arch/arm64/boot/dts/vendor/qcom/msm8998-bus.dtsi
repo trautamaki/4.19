@@ -148,10 +148,10 @@
 				clocks =
 				<&clock_rpmcc RPM_SMD_MMSSNOC_AXI_CLK>,
 				<&clock_gcc GCC_MMSS_NOC_CFG_AHB_CLK>,
-				<&clock_mmss MNOC_AHB_CLK>,
-				<&clock_mmss CAMSS_AHB_CLK>,
-				<&clock_mmss VIDEO_AHB_CLK>,
-				<&clock_mmss VIDEO_AXI_CLK>;
+				<&clock_mmss MMSS_MNOC_AHB_CLK>,
+				<&clock_mmss MMSS_CAMSS_AHB_CLK>,
+				<&clock_mmss MMSS_VIDEO_AHB_CLK>,
+				<&clock_mmss MMSS_VIDEO_AXI_CLK>;
 			};
 
 		};
@@ -537,8 +537,8 @@
 				"clk-mdss-ahb-no-rate",
 				"clk-mdss-axi-no-rate";
 				clocks =
-				<&clock_mmss MDSS_AHB_CLK>,
-				<&clock_mmss MDSS_AXI_CLK>;
+				<&clock_mmss MMSS_MDSS_AHB_CLK>,
+				<&clock_mmss MMSS_MDSS_AXI_CLK>;
 			};
 
 		};
@@ -1240,7 +1240,7 @@
 			qcom,slv-rpm-id = <ICBID_SLAVE_VMEM_CFG>;
 			qcom,enable-only-clk;
 			clock-names = "node_clk";
-			clocks = <&clock_mmss MNOC_MAXI_CLK>;
+			clocks = <&clock_mmss MMSS_MNOC_MAXI_CLK>;
 		};
 
 		slv_mmss_clk_xpu_cfg:slv-mmss-clk-xpu-cfg {
@@ -1316,7 +1316,7 @@
 			qcom,bus-dev = <&fab_mnoc>;
 			qcom,slv-rpm-id = <ICBID_SLAVE_VMEM>;
 			clock-names = "node_clk";
-			clocks = <&clock_mmss MNOC_MAXI_CLK>;
+			clocks = <&clock_mmss MMSS_MNOC_MAXI_CLK>;
 		};
 
 		slv_srvc_mnoc:slv-srvc-mnoc {
