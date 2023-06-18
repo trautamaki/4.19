@@ -28,7 +28,10 @@
 enum {
 	P_XO,
 	P_GPLL0,
-	P_GPUPLL0_OUT_EVEN,
+	P_CC_PLL0_OUT_EVEN,
+	P_CC_PLL0_OUT_MAIN,
+	P_CC_PLL0_OUT_ODD,
+	P_CRC_DIV,
 };
 
 /* Instead of going directly to the block, XO is routed through this branch */
@@ -39,8 +42,8 @@ static struct clk_branch gpucc_cxo_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gpucc_cxo_clk",
-			.parent_data = &(const struct clk_parent_data){
-				.fw_name = "xo"
+			.parent_names = (const char *[]) {
+				"xo",
 			},
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
@@ -69,7 +72,7 @@ static struct clk_alpha_pll gpupll0 = {
 	.num_vco = ARRAY_SIZE(fabia_vco),
 	.clkr.hw.init = &(struct clk_init_data){
 		.name = "gpupll0",
-		.parent_hws = (const struct clk_hw *[]){ &gpucc_cxo_clk.clkr.hw },
+		.parent_names = (const char *[]){ "gpucc_xo" },
 		.num_parents = 1,
 		.ops = &clk_alpha_pll_fabia_ops,
 	},
@@ -84,31 +87,35 @@ static struct clk_alpha_pll_postdiv gpupll0_out_even = {
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_FABIA],
 	.clkr.hw.init = &(struct clk_init_data){
 		.name = "gpupll0_out_even",
-		.parent_hws = (const struct clk_hw *[]){ &gpupll0.clkr.hw },
+		.parent_names = (const char *[]){ "gpu_cc_pll0" },
 		.num_parents = 1,
 		.flags = CLK_SET_RATE_PARENT,
 		.ops = &clk_alpha_pll_postdiv_fabia_ops,
 	},
 };
 
-static const struct parent_map gpu_xo_gpll0_map[] = {
+static const struct parent_map gpucc_parent_map_0[] = {
+	{ P_XO, 0 },
+	{ P_CRC_DIV,  1 },
+	{ P_CC_PLL0_OUT_ODD, 2 },
+	//{ P_GPLL0, 5 },
+};
+
+static const char * const gpucc_parent_names_0[] = {
+	"gpucc_xo",
+	"crc_div",
+	"gpucc_pll0_out_odd",
+	//"gcc_gpu_gpll0_clk",
+};
+
+static const struct parent_map gpucc_parent_map_1[] = {
 	{ P_XO, 0 },
 	{ P_GPLL0, 5 },
 };
 
-static const struct clk_parent_data gpu_xo_gpll0[] = {
-	{ .hw = &gpucc_cxo_clk.clkr.hw },
-	{ .fw_name = "gpll0" },
-};
-
-static const struct parent_map gpu_xo_gpupll0_map[] = {
-	{ P_XO, 0 },
-	{ P_GPUPLL0_OUT_EVEN, 1 },
-};
-
-static const struct clk_parent_data gpu_xo_gpupll0[] = {
-	{ .hw = &gpucc_cxo_clk.clkr.hw },
-	{ .hw = &gpupll0_out_even.clkr.hw },
+static const char * const gpucc_parent_names_1[] = {
+	"gpucc_xo",
+	"gcc_gpu_gpll0_clk",
 };
 
 static const struct freq_tbl ftbl_rbcpr_clk_src[] = {
@@ -120,30 +127,37 @@ static const struct freq_tbl ftbl_rbcpr_clk_src[] = {
 static struct clk_rcg2 rbcpr_clk_src = {
 	.cmd_rcgr = 0x1030,
 	.hid_width = 5,
-	.parent_map = gpu_xo_gpll0_map,
+	.parent_map = gpucc_parent_map_1,
 	.freq_tbl = ftbl_rbcpr_clk_src,
 	.clkr.hw.init = &(struct clk_init_data){
 		.name = "rbcpr_clk_src",
-		.parent_data = gpu_xo_gpll0,
-		.num_parents = ARRAY_SIZE(gpu_xo_gpll0),
+		.parent_names = gpucc_parent_names_1,
+		.num_parents = ARRAY_SIZE(gpucc_parent_names_1),
 		.ops = &clk_rcg2_ops,
 	},
 };
 
-static const struct freq_tbl ftbl_gfx3d_clk_src[] = {
-	{ .src = P_GPUPLL0_OUT_EVEN, .pre_div = 3 },
+static struct freq_tbl ftbl_gfx3d_clk_src[] = {
+	F(180000000, P_CRC_DIV, 1, 0, 0),
+	F(257000000, P_CRC_DIV, 1, 0, 0),
+	F(342000000, P_CRC_DIV, 1, 0, 0),
+	F(414000000, P_CRC_DIV, 1, 0, 0),
+	F(515000000, P_CRC_DIV, 1, 0, 0),
+	F(596000000, P_CRC_DIV, 1, 0, 0),
+	F(670000000, P_CRC_DIV, 1, 0, 0),
+	F(710000000, P_CRC_DIV, 1, 0, 0),
 	{ }
 };
 
 static struct clk_rcg2 gfx3d_clk_src = {
 	.cmd_rcgr = 0x1070,
+	.parent_map = gpucc_parent_map_0,
 	.hid_width = 5,
-	.parent_map = gpu_xo_gpupll0_map,
 	.freq_tbl = ftbl_gfx3d_clk_src,
 	.clkr.hw.init = &(struct clk_init_data){
 		.name = "gfx3d_clk_src",
-		.parent_data = gpu_xo_gpupll0,
-		.num_parents = ARRAY_SIZE(gpu_xo_gpupll0),
+		.parent_names = gpucc_parent_names_0,
+		.num_parents = ARRAY_SIZE(gpucc_parent_names_0),
 		.ops = &clk_rcg2_ops,
 		.flags = CLK_SET_RATE_PARENT | CLK_OPS_PARENT_ENABLE,
 	},
@@ -157,12 +171,12 @@ static const struct freq_tbl ftbl_rbbmtimer_clk_src[] = {
 static struct clk_rcg2 rbbmtimer_clk_src = {
 	.cmd_rcgr = 0x10b0,
 	.hid_width = 5,
-	.parent_map = gpu_xo_gpll0_map,
+	.parent_map = gpucc_parent_map_1,
 	.freq_tbl = ftbl_rbbmtimer_clk_src,
 	.clkr.hw.init = &(struct clk_init_data){
 		.name = "rbbmtimer_clk_src",
-		.parent_data = gpu_xo_gpll0,
-		.num_parents = ARRAY_SIZE(gpu_xo_gpll0),
+		.parent_names = gpucc_parent_names_1,
+		.num_parents = ARRAY_SIZE(gpucc_parent_names_1),
 		.ops = &clk_rcg2_ops,
 	},
 };
@@ -178,12 +192,12 @@ static const struct freq_tbl ftbl_gfx3d_isense_clk_src[] = {
 static struct clk_rcg2 gfx3d_isense_clk_src = {
 	.cmd_rcgr = 0x1100,
 	.hid_width = 5,
-	.parent_map = gpu_xo_gpll0_map,
+	.parent_map = gpucc_parent_map_1,
 	.freq_tbl = ftbl_gfx3d_isense_clk_src,
 	.clkr.hw.init = &(struct clk_init_data){
 		.name = "gfx3d_isense_clk_src",
-		.parent_data = gpu_xo_gpll0,
-		.num_parents = ARRAY_SIZE(gpu_xo_gpll0),
+		.parent_names = gpucc_parent_names_1,
+		.num_parents = ARRAY_SIZE(gpucc_parent_names_1),
 		.ops = &clk_rcg2_ops,
 	},
 };
@@ -195,7 +209,9 @@ static struct clk_branch rbcpr_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "rbcpr_clk",
-			.parent_hws = (const struct clk_hw *[]){ &rbcpr_clk_src.clkr.hw },
+			.parent_names = (const char*[]) {
+				"rbcpr_clk_src",
+			},
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 			.flags = CLK_SET_RATE_PARENT,
@@ -210,7 +226,9 @@ static struct clk_branch gfx3d_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gfx3d_clk",
-			.parent_hws = (const struct clk_hw *[]){ &gfx3d_clk_src.clkr.hw },
+			.parent_names = (const char*[]) {
+				"gfx3d_clk_src",
+			},
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 			.flags = CLK_SET_RATE_PARENT,
@@ -225,7 +243,9 @@ static struct clk_branch rbbmtimer_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "rbbmtimer_clk",
-			.parent_hws = (const struct clk_hw *[]){ &rbbmtimer_clk_src.clkr.hw },
+			.parent_names = (const char*[]) {
+				"rbbmtimer_clk_src",
+			},
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 			.flags = CLK_SET_RATE_PARENT,
@@ -240,7 +260,9 @@ static struct clk_branch gfx3d_isense_clk = {
 		.enable_mask = BIT(0),
 		.hw.init = &(struct clk_init_data){
 			.name = "gfx3d_isense_clk",
-			.parent_hws = (const struct clk_hw *[]){ &gfx3d_isense_clk_src.clkr.hw },
+			.parent_names = (const char*[]) {
+				"gfx3d_isense_clk_src",
+			},
 			.num_parents = 1,
 			.ops = &clk_branch2_ops,
 		},
