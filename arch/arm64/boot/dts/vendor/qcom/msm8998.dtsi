@@ -1124,9 +1124,10 @@
 		reg-names = "cc_base";
 		vdd_dig-supply = <&pm8998_s1_level>;
 		vdd_mmsscc_mx-supply = <&pm8998_s9_level>;
-		clock-names = "xo", "gpll0";
+		clock-names = "xo", "gpll0", "gpll0_div";
 		clocks = <&clock_rpmcc RPM_SMD_XO_CLK_SRC>,
-			 <&clock_gcc GCC_MMSS_GPLL0_CLK>;
+			 <&clock_gcc GCC_MMSS_GPLL0_CLK>,
+			 <&clock_gcc GCC_MMSS_GPLL0_DIV_CLK>;
 		#clock-cells = <1>;
 		#reset-cells = <1>;
 	};
@@ -1144,7 +1145,7 @@
 		vdd_dig-supply = <&pm8998_s1_level>;
 		clock-names = "xo_ao", "gpll0";
 		clocks = <&clock_rpmcc RPM_SMD_XO_A_CLK_SRC>,
-			 <&clock_gcc GPLL0_OUT_MAIN>;
+			<&clock_gcc GCC_GPU_GPLL0_CLK>;
 		#clock-cells = <1>;
 	};
 
@@ -1158,7 +1159,7 @@
 		qcom,gfx3d_clk_src-opp-handle = <&msm_gpu>;
 		clock-names = "xo_ao", "gpll0";
 		clocks = <&clock_rpmcc RPM_SMD_XO_A_CLK_SRC>,
-			<&clock_gcc GPLL0_OUT_MAIN>;
+			<&clock_gcc GCC_GPU_GPLL0_CLK>;
 		#clock-cells = <1>;
 	};
 
@@ -1776,7 +1777,7 @@
 			"ref_aux_clk";
 		clocks = <&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
 			<&clock_gcc GCC_UFS_CLKREF_CLK>,
-			<&clock_gcc GCC_UFS_PHY_AUX_CLK>;
+			<&clock_gcc GCC_UFS_PHY_AUX_HW_CTL_CLK>;
 		status = "disabled";
 	};
 
@@ -1827,11 +1828,11 @@
 			"tx_lane0_sync_clk",
 			"rx_lane0_sync_clk";
 		clocks =
-			<&clock_gcc GCC_UFS_AXI_CLK>,
-			<&clock_gcc GCC_AGGRE1_UFS_AXI_CLK>,
+			<&clock_gcc GCC_UFS_AXI_HW_CTL_CLK>,
+			<&clock_gcc GCC_AGGRE1_UFS_AXI_HW_CTL_CLK>,
 			<&clock_gcc GCC_UFS_AHB_CLK>,
-			<&clock_gcc GCC_UFS_UNIPRO_CORE_CLK>,
-			<&clock_gcc GCC_UFS_ICE_CORE_CLK>,
+			<&clock_gcc GCC_UFS_UNIPRO_CORE_HW_CTL_CLK>,
+			<&clock_gcc GCC_UFS_ICE_CORE_HW_CTL_CLK>,
 			<&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
 			<&clock_gcc GCC_UFS_TX_SYMBOL_0_CLK>,
 			<&clock_gcc GCC_UFS_RX_SYMBOL_0_CLK>;
@@ -1903,7 +1904,7 @@
 		pinctrl-0 = <&ufs_dev_reset_assert>;
 		pinctrl-1 = <&ufs_dev_reset_deassert>;
 
-		resets = <&clock_gcc GCC_UFS_BCR>;
+		resets = <&clock_gcc UFS_BCR>;
 		reset-names = "core_reset";
 
 		status = "disabled";
@@ -1939,15 +1940,16 @@
 			<&clock_gcc GCC_AGGRE1_USB3_AXI_CLK>,
 			<&clock_gcc GCC_USB30_MOCK_UTMI_CLK>,
 			<&clock_gcc GCC_USB30_SLEEP_CLK>,
-			<&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>;
+			<&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>,
+			<&clock_rpmcc CXO_SMD_DWC3_CLK>;
 
 		clock-names = "core_clk", "iface_clk", "bus_aggr_clk",
-				"utmi_clk", "sleep_clk", "cfg_ahb_clk";
+				"utmi_clk", "sleep_clk", "cfg_ahb_clk", "xo";
 
 		qcom,core-clk-rate = <120000000>;
 		qcom,core-clk-rate-hs = <60000000>;
 
-		resets = <&clock_gcc GCC_USB_30_BCR>;
+		resets = <&clock_gcc USB_30_BCR>;
 		reset-names = "core_reset";
 
 		dwc3@a800000 {
@@ -2032,7 +2034,7 @@
 
 		clock-names =  "ref_clk_src", "ref_clk", "cfg_ahb_clk";
 
-		resets = <&clock_gcc GCC_QUSB2PHY_PRIM_BCR>;
+		resets = <&clock_gcc QUSB2PHY_PRIM_BCR>;
 		reset-names = "phy_reset";
 	};
 
@@ -2188,8 +2190,8 @@
 		clock-names = "aux_clk", "pipe_clk", "cfg_ahb_clk",
 				"ref_clk_src", "ref_clk";
 
-		resets = <&clock_gcc GCC_USB3_PHY_BCR>,
-			 <&clock_gcc GCC_USB3PHY_PHY_BCR>;
+		resets = <&clock_gcc USB3_PHY_BCR>,
+			 <&clock_gcc USB3PHY_PHY_BCR>;
 		reset-names = "phy_reset", "phy_phy_reset";
 	};
 
@@ -2854,9 +2856,9 @@
 					<0>, <0>, <0>, <0>, <0>, <0>,
 					<0>, <0>;
 
-		resets = <&clock_gcc GCC_PCIE_PHY_BCR>,
-			 <&clock_gcc GCC_PCIE_0_PHY_BCR>,
-			 <&clock_gcc GCC_PCIE_0_PHY_BCR>;
+		resets = <&clock_gcc PCIE_PHY_BCR>,
+			 <&clock_gcc PCIE_0_PHY_BCR>,
+			 <&clock_gcc PCIE_0_PHY_BCR>;
 
 		reset-names = "pcie_phy_reset",
 				"pcie_0_phy_reset",
@@ -2930,12 +2932,12 @@
 		qcom,proxy-reg-names = "vdd";
 		qcom,mas-crypto = <&mas_crypto_c0>;
 
-		clocks = <&clock_mmss VIDEO_CORE_CLK>,
-			 <&clock_mmss MNOC_AHB_CLK>,
-			 <&clock_mmss VIDEO_AHB_CLK>,
-			 <&clock_rpmcc RPM_SMD_MMSSNOC_AXI_CLK>,
-			 <&clock_mmss VIDEO_AXI_CLK>,
-			 <&clock_mmss VIDEO_MAXI_CLK>;
+		clocks = <&clock_mmss MMSS_VIDEO_CORE_CLK>,
+			 <&clock_mmss MMSS_MNOC_AHB_CLK>,
+			 <&clock_mmss MMSS_VIDEO_AHB_CLK>,
+			 <&clock_rpmcc MMSSNOC_AXI_CLK>,
+			 <&clock_mmss MMSS_VIDEO_AXI_CLK>,
+			 <&clock_mmss MMSS_VIDEO_MAXI_CLK>;
 		clock-names = "core_clk", "mnoc_ahb_clk", "iface_clk",
 			      "noc_axi_clk", "bus_clk", "maxi_clk";
 		qcom,proxy-clock-names = "core_clk","mnoc_ahb_clk",
@@ -3363,9 +3365,8 @@
 };
 
 &gdsc_bimc_smmu {
-	clock-names = "bus_clk", "mem_clk";
-	clocks = <&clock_mmss BIMC_SMMU_AXI_CLK>,
-		 <&clock_mmss BIMC_SMMU_AHB_CLK>;
+	clock-names = "bus_clk";
+	clocks = <&clock_mmss MMSS_BIMC_SMMU_AXI_CLK>;
 	proxy-supply = <&gdsc_bimc_smmu>;
 	qcom,proxy-consumer-enable;
 	status = "ok";
