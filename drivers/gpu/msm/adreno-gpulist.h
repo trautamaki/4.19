@@ -188,8 +188,7 @@ static const struct adreno_a5xx_core adreno_gpu_core_a530v2 = {
 		.features = ADRENO_SPTP_PC | ADRENO_LM |
 			ADRENO_PREEMPTION | ADRENO_64BIT |
 			ADRENO_CONTENT_PROTECTION |
-			ADRENO_A5XX_GPMU |
-			ADRENO_MMU_GLOBAL_MEMSZ_8M,
+			ADRENO_A5XX_GPMU,
 		.gpudev = &adreno_a5xx_gpudev,
 		.gmem_size = SZ_1M,
 		.busy_mask = 0xfffffffe,
@@ -214,8 +213,7 @@ static const struct adreno_a5xx_core adreno_gpu_core_a530v3 = {
 		.features = ADRENO_SPTP_PC | ADRENO_LM |
 			ADRENO_PREEMPTION | ADRENO_64BIT |
 			ADRENO_CONTENT_PROTECTION |
-			ADRENO_A5XX_GPMU |
-			ADRENO_MMU_GLOBAL_MEMSZ_8M,
+			ADRENO_A5XX_GPMU,
 		.gpudev = &adreno_a5xx_gpudev,
 		.gmem_size = SZ_1M,
 		.busy_mask = 0xfffffffe,
@@ -517,8 +515,7 @@ static const struct adreno_a5xx_core adreno_gpu_core_a540v2 = {
 		.features = ADRENO_PREEMPTION | ADRENO_64BIT |
 			ADRENO_CONTENT_PROTECTION |
 			ADRENO_SPTP_PC |
-			ADRENO_A5XX_GPMU |
-			ADRENO_MMU_GLOBAL_MEMSZ_8M,
+			ADRENO_A5XX_GPMU,
 		.gpudev = &adreno_a5xx_gpudev,
 		.gmem_size = SZ_1M,
 		.busy_mask = 0xfffffffe,
