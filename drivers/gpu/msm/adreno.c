@@ -1561,9 +1561,6 @@ static int adreno_probe(struct platform_device *pdev)
 	if (ADRENO_FEATURE(adreno_dev, ADRENO_IOCOHERENT))
 		device->mmu.features |= KGSL_MMU_IO_COHERENT;
 
-	if (ADRENO_FEATURE(adreno_dev, ADRENO_MMU_GLOBAL_MEMSZ_8M))
-		device->mmu.features |= KGSL_MMU_GLOBAL_MEMSZ_8M;
-
 	/* Allocate the memstore for storing timestamps and other useful info */
 	priv = KGSL_MEMDESC_CONTIG;
 
