@@ -1135,9 +1135,10 @@
 		reg-names = "cc_base";
 		vdd_dig-supply = <&pm8998_s1_level>;
 		vdd_mmsscc_mx-supply = <&pm8998_s9_level>;
-		clock-names = "xo", "gpll0";
+		clock-names = "xo", "gpll0", "gpll0_div";
 		clocks = <&clock_rpmcc RPM_SMD_XO_CLK_SRC>,
-			 <&clock_gcc GCC_MMSS_GPLL0_CLK>;
+			 <&clock_gcc GCC_MMSS_GPLL0_CLK>,
+			 <&clock_gcc GCC_MMSS_GPLL0_DIV_CLK>;
 		#clock-cells = <1>;
 		#reset-cells = <1>;
 	};
@@ -1155,7 +1156,7 @@
 		vdd_dig-supply = <&pm8998_s1_level>;
 		clock-names = "xo_ao", "gpll0";
 		clocks = <&clock_rpmcc RPM_SMD_XO_A_CLK_SRC>,
-			 <&clock_gcc GPLL0_OUT_MAIN>;
+			 <&clock_gcc GCC_GPU_GPLL0_CLK>;
 		#clock-cells = <1>;
 	};
 
@@ -1169,7 +1170,7 @@
 		qcom,gfx3d_clk_src-opp-handle = <&msm_gpu>;
 		clock-names = "xo_ao", "gpll0";
 		clocks = <&clock_rpmcc RPM_SMD_XO_A_CLK_SRC>,
-			<&clock_gcc GPLL0_OUT_MAIN>;
+			<&clock_gcc GCC_GPU_GPLL0_CLK>;
 		#clock-cells = <1>;
 	};
 
@@ -1686,7 +1687,7 @@
 			"ref_aux_clk";
 		clocks = <&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
 			<&clock_gcc GCC_UFS_CLKREF_CLK>,
-			<&clock_gcc GCC_UFS_PHY_AUX_CLK>;
+			<&clock_gcc GCC_UFS_PHY_AUX_HW_CTL_CLK>;
 		status = "disabled";
 	};
 
@@ -1737,11 +1738,11 @@
 			"tx_lane0_sync_clk",
 			"rx_lane0_sync_clk";
 		clocks =
-			<&clock_gcc GCC_UFS_AXI_CLK>,
-			<&clock_gcc GCC_AGGRE1_UFS_AXI_CLK>,
+			<&clock_gcc GCC_UFS_AXI_HW_CTL_CLK>,
+			<&clock_gcc GCC_AGGRE1_UFS_AXI_HW_CTL_CLK>,
 			<&clock_gcc GCC_UFS_AHB_CLK>,
-			<&clock_gcc GCC_UFS_UNIPRO_CORE_CLK>,
-			<&clock_gcc GCC_UFS_ICE_CORE_CLK>,
+			<&clock_gcc GCC_UFS_UNIPRO_CORE_HW_CTL_CLK>,
+			<&clock_gcc GCC_UFS_ICE_CORE_HW_CTL_CLK>,
 			<&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
 			<&clock_gcc GCC_UFS_TX_SYMBOL_0_CLK>,
 			<&clock_gcc GCC_UFS_RX_SYMBOL_0_CLK>;
@@ -1857,10 +1858,11 @@
 			<&clock_gcc GCC_AGGRE1_USB3_AXI_CLK>,
 			<&clock_gcc GCC_USB30_MOCK_UTMI_CLK>,
 			<&clock_gcc GCC_USB30_SLEEP_CLK>,
-			<&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>;
+			<&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>,
+			<&clock_rpmcc CXO_SMD_DWC3_CLK>;
 
 		clock-names = "core_clk", "iface_clk", "bus_aggr_clk",
-				"utmi_clk", "sleep_clk", "cfg_ahb_clk";
+				"utmi_clk", "sleep_clk", "cfg_ahb_clk", "xo";
 
 		qcom,core-clk-rate = <120000000>;
 		qcom,core-clk-rate-hs = <60000000>;
