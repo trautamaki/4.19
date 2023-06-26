@@ -78,10 +78,10 @@
 		venus-core1-supply = <&gdsc_venus_core1>;
 
 		/* Clocks */
-		clock-names = "gcc_mmss_sys_noc_axi_clk",
-			"mmssnoc_axi_clk", "mmss_mnoc_ahb_clk",
-			"mmss_bimc_smmu_ahb_clk", "mmss_bimc_smmu_axi_clk",
-			"mmss_mnoc_maxi_clk",
+		clock-names = "sys_noc_axi_clk",
+			"noc_axi_clk", "mnoc_ahb_clk",
+			"smmu_ahb_clk", "smmu_axi_clk",
+			"mnoc_maxi_clk",
 			"core_clk", "iface_clk", "bus_clk",
 			"maxi_clk", "core0_clk", "core1_clk";
 		clocks = <&clock_gcc GCC_MMSS_SYS_NOC_AXI_CLK>,
