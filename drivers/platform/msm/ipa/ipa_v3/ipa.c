@@ -7315,10 +7315,6 @@ static int get_ipa_dts_pm_info(struct platform_device *pdev,
 	int result;
 	int i, j;
 
-#if 1
-		return 0;
-#endif
-
 	result = of_property_read_u32(pdev->dev.of_node,
 		"qcom,msm-bus,num-cases",
 		&ipa_drv_res->pm_init.threshold_size);
