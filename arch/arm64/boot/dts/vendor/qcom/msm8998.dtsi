@@ -496,7 +496,7 @@
 	};
 
 	wakegpio: wake-gpio {
-		compatible = "qcom,mpm-gpio-msm8998", "qcom,mpm-gpio";
+		compatible = "qcom,mpm-gpio";
 		interrupt-controller;
 		interrupt-parent = <&intc>;
 		#interrupt-cells = <3>;
