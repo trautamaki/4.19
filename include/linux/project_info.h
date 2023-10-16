@@ -9,6 +9,8 @@ typedef     __u8        uint8;
 #define BUF_SIZE		64
 
 extern uint32_t chip_serial_num;
+extern unsigned long totalram_pages;
+
 
 struct project_info {
 	char project_name[8];
