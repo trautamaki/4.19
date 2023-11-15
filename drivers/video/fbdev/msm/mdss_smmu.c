@@ -36,7 +36,6 @@
 #include "mdss_smmu.h"
 #include "mdss_debug.h"
 
-#define SZ_4G		0xF0000000
 static inline struct bus_type *mdss_mmu_get_bus(struct device *dev)
 {
         return &platform_bus_type;
